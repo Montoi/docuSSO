@@ -49,7 +49,7 @@ function renderSidebar() {
     // Header for Mobile (preserved from render logic)
     const mobileHeader = `
       <div class="mb-8 hidden lg:flex items-center justify-between">
-        <span class="font-bold text-xl tracking-tight text-text-header">Base UI</span>
+        <span class="font-bold text-xl tracking-tight text-text-header">SSO Doc</span>
         <button id="theme-toggle" class="p-2 rounded-md text-gray-400 hover:text-text-primary hover:bg-bg-active transition-colors" aria-label="Toggle Dark Mode">
             <!-- Sun Icon (for dark mode) -->
             <svg id="sun-icon" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
