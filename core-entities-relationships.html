@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entities and Relationships - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Database</div>
+
+      <h1>Entidades y Relaciones Principales</h1>
+
+      <section class="prose prose-invert max-w-none">
+        <p>
+          Esta página documenta las entidades principales de la base de datos en el sistema SSO, sus propiedades,
+          relaciones de clave foránea y propiedades de navegación. El sistema almacena datos en dos esquemas de SQL
+          Server: <strong>Core</strong> (para entidades específicas de SSO) y <strong>General</strong> (para datos de
+          usuarios/personas). Todas las entidades heredan de <code>EntityAuditableBase</code>, que proporciona campos de
+          auditoría y soporte para eliminación lógica.
+        </p>
+        <p>
+          Para entidades del flujo de solicitudes de acceso, ver <a href="#"
+            class="text-accent hover:underline">Solicitudes de Acceso</a>. Para la estructura jerárquica de módulos, ver
+          <a href="#" class="text-accent hover:underline">Jerarquía de Módulos</a>.
+        </p>
+
+        <h2>Resumen del Esquema de Entidades</h2>
+        <p>El modelo de dominio SSO se centra en cinco entidades principales que gestionan el registro de aplicaciones,
+          autenticación de usuarios y estructuras jerárquicas de permisos:</p>
+
+        <h3>Entidades del Dominio Principal (Esquema: Core)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Entidad</th>
+              <th>Tabla</th>
+              <th>Propósito Principal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Application</td>
+              <td>Application</td>
+              <td>Sistemas externos registrados con SSO</td>
+            </tr>
+            <tr>
+              <td>ApplicationModule</td>
+              <td>ApplicationModule</td>
+              <td>Estructura jerárquica de menú/permisos</td>
+            </tr>
+            <tr>
+              <td>ApplicationModuleAccess</td>
+              <td>ApplicationModuleAccess</td>
+              <td>Asignaciones de permisos (usuario o grupo)</td>
+            </tr>
+            <tr>
+              <td>Group</td>
+              <td>Group</td>
+              <td>Colecciones de usuarios basadas en roles por aplicación</td>
+            </tr>
+            <tr>
+              <td>UserAccessControl</td>
+              <td>UserAccessControl</td>
+              <td>Tokens de sesión con expiración</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Entidades de Gestión de Usuarios (Esquema: General)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Entidad</th>
+              <th>Tabla</th>
+              <th>Propósito Principal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>User</td>
+              <td>User</td>
+              <td>Credenciales de autenticación y banderas</td>
+            </tr>
+            <tr>
+              <td>Person</td>
+              <td>Person</td>
+              <td>Información personal y demográfica</td>
+            </tr>
+            <tr>
+              <td>Employee</td>
+              <td>Employee</td>
+              <td>Relaciones laborales organizacionales</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Diagram Placeholder -->
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama de Relaciones de Entidades de Alto Nivel]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          Application.cs (1-22) • User.cs (1-30) • ApplicationModule.cs (1-29) • Group.cs (1-19)
+        </div>
+
+        <h2>Entidad Application</h2>
+        <p>
+          Representa sistemas externos registrados con el servicio SSO. Cada aplicación tiene credenciales únicas y
+          define su propia jerarquía de módulos, grupos y asignaciones de usuarios.
+        </p>
+
+        <h3>Estructura de la Entidad</h3>
+        <p class="text-sm text-text-secondary mb-2">Tabla: <code>Core.Application</code> | Clave Primaria:
+          <code>ApplicationId</code> (Identity)</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Propiedad</th>
+              <th>Tipo</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Id</td>
+              <td>int</td>
+              <td>Identificador único</td>
+            </tr>
+            <tr>
+              <td>Name</td>
+              <td>nvarchar(100)</td>
+              <td>Nombre de visualización (Indexado)</td>
+            </tr>
+            <tr>
+              <td>Secret</td>
+              <td>nvarchar(100)</td>
+              <td>Hash BCrypt del secreto</td>
+            </tr>
+            <tr>
+              <td>CallbackUrl</td>
+              <td>nvarchar(max)</td>
+              <td>URL callback OAuth</td>
+            </tr>
+            <tr>
+              <td>PasswordClient</td>
+              <td>bool</td>
+              <td>Habilita flujo Resource Owner Password</td>
+            </tr>
+            <tr>
+              <td>IsActive</td>
+              <td>bool</td>
+              <td>Estado habilitado</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Datos Semilla (SISPLAN)</h3>
+        <pre><code class="language-json">{
+  "Id": 1002,
+  "Name": "SISPLAN",
+  "Secret": "$2a$11$3RU7.lOXI.jtzhQL2M4a3ePlioRBYI0WGF4t3GNEj2nBJxa7txELO",
+  "PasswordClient": true
+}</code></pre>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Migrations/20250819140708_Init-Create.Designer.cs • SSO.DataModel/Entities/Core/Application.cs
+        </div>
+
+        <h2>Entidad User</h2>
+        <p>
+          Almacena credenciales de autenticación y banderas del sistema. Relación 1:1 con Person. La bandera
+          <code>IsExternal</code> determina si usa password local o Active Directory.
+        </p>
+
+        <h3>Estructura de la Entidad</h3>
+        <p class="text-sm text-text-secondary mb-2">Tabla: <code>General.User</code> | Clave Primaria:
+          <code>UserId</code></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Propiedad</th>
+              <th>Tipo</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Username</td>
+              <td>nvarchar</td>
+              <td>Login (Único)</td>
+            </tr>
+            <tr>
+              <td>Password</td>
+              <td>nvarchar</td>
+              <td>Hash BCrypt (o nulo si es externo)</td>
+            </tr>
+            <tr>
+              <td>IsExternal</td>
+              <td>bool</td>
+              <td>true = Autenticación AD</td>
+            </tr>
+            <tr>
+              <td>IsRoot</td>
+              <td>bool</td>
+              <td>Superadmin (Acceso total)</td>
+            </tr>
+            <tr>
+              <td>IsLocked</td>
+              <td>bool</td>
+              <td>Bloqueo de cuenta</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>ApplicationModuleAccess: Modelo de Permisos de Doble Ruta</h2>
+        <p>
+          Implementa permisos flexibles: acceso otorgado a Usuario directo O a Grupo. <code>UserId</code> y
+          <code>GroupId</code> son mutuamente excluyentes (nullable), actuando como relación OR.
+        </p>
+
+        <h3>Valores de Permisos por Bits</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Permiso</th>
+              <th>Valor</th>
+              <th>Binario</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Read</td>
+              <td>1</td>
+              <td>0001</td>
+              <td>Ver contenido</td>
+            </tr>
+            <tr>
+              <td>Write</td>
+              <td>2</td>
+              <td>0010</td>
+              <td>Modificar contenido</td>
+            </tr>
+            <tr>
+              <td>Admin</td>
+              <td>4</td>
+              <td>0100</td>
+              <td>Funciones admin</td>
+            </tr>
+            <tr>
+              <td>Manage</td>
+              <td>8</td>
+              <td>1000</td>
+              <td>Control total</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          ApplicationModuleAccess.cs (1-19) • MainDbContextModelSnapshot.cs
+        </div>
+
+        <h2>Entidad Group</h2>
+        <p>
+          Implementa RBAC. Cada grupo pertenece a una sola aplicación y agrupa usuarios para asignarles permisos de
+          módulos en bloque.
+        </p>
+
+        <h2>Entidad ApplicationModule: Estructura Jerárquica</h2>
+        <p>
+          Crea menús de profundidad ilimitada vía auto-referencia <code>ParentModuleId</code>.
+        </p>
+
+        <h3>Estructura Selecta</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Propiedad</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ParentModuleId</td>
+              <td>Módulo padre (null = raíz)</td>
+            </tr>
+            <tr>
+              <td>Order</td>
+              <td>Secuencia de visualización</td>
+            </tr>
+            <tr>
+              <td>Path</td>
+              <td>Ruta frontend (ej. "/sistema")</td>
+            </tr>
+            <tr>
+              <td>Icon</td>
+              <td>Clase CSS de icono</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Ejemplo de Jerarquía</h3>
+        <pre class="text-xs">
+Sistema (Id: 34)
+├── Configuraciones (Path: "/sistema/configuraciones")
+├── Cola de correos (Path: "/sistema/cola-correos")
+└── Bitácora (Path: "/sistema/bitacora")
+        </pre>
+
+        <h2>UserAccessControl: Gestión de Sesiones</h2>
+        <p>
+          Token de sesión con expiración. <code>UniqueId</code> (GUID) vincula el JWT al registro en BD, permitiendo
+          revocación.
+        </p>
+
+        <h2>Entidades Person y Employee</h2>
+        <ul>
+          <li><strong>Person:</strong> Datos demográficos (Nombres, Documento, Email). Separado de User.</li>
+          <li><strong>Employee:</strong> Relación laboral (Institución, Cargo, Área). Opcional.</li>
+        </ul>
+
+        <h2>Tablas de Unión</h2>
+        <ul>
+          <li><code>ApplicationUser</code>: Muchos-a-muchos (User ↔ Application). Define acceso a apps.</li>
+          <li><code>UserGroup</code>: Muchos-a-muchos (User ↔ Group). Define roles.</li>
+        </ul>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

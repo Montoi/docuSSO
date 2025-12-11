@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authentication Flow - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Authentication & Authorization
+      </div>
+
+      <h1>Flujo de Autenticación</h1>
+
+      <section class="prose prose-invert max-w-none">
+
+        <p>
+          Este documento detalla el proceso de autenticación basado en JWT en el sistema SSO, incluyendo la validación
+          de credenciales para usuarios internos y externos, la generación de tokens y la gestión de sesiones a través
+          de la entidad UserAccessControl. El flujo de autenticación determina cómo los usuarios se autentican, cómo se
+          crean y validan los tokens JWT y cómo se rastrean las sesiones de usuario.
+        </p>
+
+        <p>
+          Para detalles sobre la integración con Active Directory, ver <a href="#"
+            class="text-accent hover:underline">Integración con Active Directory</a>. Para la resolución de permisos
+          después de la autenticación, ver <a href="#" class="text-accent hover:underline">Sistema de Permisos</a>. Para
+          el hash de contraseñas y flujos de restablecimiento, ver <a href="#"
+            class="text-accent hover:underline">Gestión de Contraseñas</a>.
+        </p>
+
+        <h2>Descripción General del Flujo de Autenticación</h2>
+        <p>
+          El sistema SSO implementa un flujo de autenticación de múltiples etapas que valida las credenciales del
+          usuario, crea tokens de sesión y genera tokens JWT para el acceso a la API. El flujo diferencia entre usuarios
+          internos (contraseña almacenada localmente) y usuarios externos (autenticados vía Active Directory).
+        </p>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo de Autenticación Completo]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Authentication/AuthController.cs (48-115) •
+          SSO.BusinessLayer/Services/Authentication/AuthService.cs (51-111)
+        </div>
+
+        <h2>Proceso de Validación de Credenciales</h2>
+        <p>
+          El sistema de autenticación valida las credenciales de usuario a través de un proceso de múltiples etapas que
+          verifica el estado de la cuenta del usuario, valida las contraseñas y verifica el acceso a la aplicación.
+        </p>
+
+        <h3>Verificaciones de Estado de Cuenta de Usuario</h3>
+        <p>Antes de validar las credenciales, el sistema verifica varias banderas de la entidad User:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Bandera</th>
+              <th>Tipo</th>
+              <th>Momento de Verificación</th>
+              <th>Acción si es Verdadero</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>IsLocked</td>
+              <td>bool</td>
+              <td>Pre-autenticación</td>
+              <td>Retornar 401 con mensaje "Usuario bloqueado"</td>
+            </tr>
+            <tr>
+              <td>IsActive</td>
+              <td>bool</td>
+              <td>Pre-autenticación</td>
+              <td>Retornar 401 con mensaje "Usuario deshabilitado"</td>
+            </tr>
+            <tr>
+              <td>ResetPassword</td>
+              <td>bool</td>
+              <td>Post-autenticación</td>
+              <td>Retornar 307 redirect a /change-password</td>
+            </tr>
+            <tr>
+              <td>IsExternal</td>
+              <td>bool</td>
+              <td>Durante autenticación</td>
+              <td>Determina la ruta de validación de credenciales</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          El método <code>_ValidateUser</code> en <code>AuthController</code> realiza estas verificaciones
+          secuencialmente antes de proceder con la validación de credenciales.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Authentication/AuthController.cs (190-215) • SSO.BusinessLayer/Dtos/General/UserDto.cs
+          (12-15)
+        </div>
+
+        <h3>Autenticación de Usuarios Internos vs Externos</h3>
+        <p>La bandera <code>User.IsExternal</code> determina la ruta de validación de credenciales:</p>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Rutas de Validación de Credenciales]
+        </div>
+
+        <h4>Autenticación de Usuario Interno (IsExternal = false)</h4>
+        <p>
+          Los usuarios internos tienen su hash de contraseña almacenado en el campo <code>User.Password</code>. El
+          método <code>AuthService.ExternalLogin</code> usa BCrypt para verificar la contraseña enviada contra el hash
+          almacenado. A pesar del nombre del método "ExternalLogin", maneja la autenticación interna a través de la
+          llamada <code>BCrypt.Verify()</code>.
+        </p>
+
+        <h4>Autenticación de Usuario Externo (IsExternal = true)</h4>
+        <p>
+          Los usuarios externos se autentican a través de Active Directory usando el método
+          <code>ActiveDirectoryService.AuthUser</code>, que realiza la autenticación LDAP contra el controlador de
+          dominio configurado. El campo <code>User.Password</code> típicamente es nulo para usuarios externos.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Authentication/AuthController.cs (48-115) •
+          SSO.BusinessLayer/Services/Authentication/AuthService.cs (51-69) • SSO.BusinessLayer/Dtos/General/UserDto.cs
+          (12)
+        </div>
+
+        <h2>Flujo de Restablecimiento de Contraseña</h2>
+        <p>
+          Cuando <code>User.ResetPassword</code> es verdadero, el flujo de autenticación redirige a los usuarios para
+          cambiar su contraseña:
+        </p>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo de Restablecimiento de Contraseña]
+        </div>
+
+        <p>
+          El endpoint <code>UserController.ChangePassword</code> maneja las actualizaciones de contraseña. Verifica que
+          la bandera ResetPassword sea verdadera, hashea la nueva contraseña usando BCrypt, actualiza la base de datos y
+          establece ResetPassword = false para permitir la autenticación normal.
+        </p>
+        <p>
+          El restablecimiento administrativo de contraseña vía <code>UserController.PasswordReset</code> establece la
+          contraseña del usuario a <code>SystemSettings.DefaultSystemPassword</code> (típicamente "Inicio01") y
+          establece ResetPassword = true, forzando al usuario a cambiarla en el próximo inicio de sesión.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/UserController.cs (115-161, 163-203)
+        </div>
+
+        <h2>Gestión de Sesiones vía UserAccessControl</h2>
+        <p>
+          El sistema SSO rastrea las sesiones de usuario a través de la entidad <code>UserAccessControl</code>, que
+          sirve como puente entre los tokens JWT y las sesiones de usuario activas.
+        </p>
+
+        <h3>Estructura de la Entidad UserAccessControl</h3>
+        <p>La entidad UserAccessControl contiene los siguientes campos clave:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th>
+              <th>Tipo</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>UniqueId</td>
+              <td>Guid</td>
+              <td>Identificador único de sesión, usado como claim JTI del JWT</td>
+            </tr>
+            <tr>
+              <td>UserId</td>
+              <td>int</td>
+              <td>Clave foránea a la entidad User</td>
+            </tr>
+            <tr>
+              <td>ApplicationId</td>
+              <td>int</td>
+              <td>Clave foránea a la entidad Application</td>
+            </tr>
+            <tr>
+              <td>ExpireAt</td>
+              <td>DateTime</td>
+              <td>Marca de tiempo de expiración de sesión</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          Cada inicio de sesión crea un nuevo registro UserAccessControl con un UniqueId criptográficamente aleatorio
+          que se convierte en el claim JTI (JWT ID) del JWT. Esto vincula los tokens JWT a registros de sesión
+          específicos en la base de datos.
+        </p>
+
+        <h3>Ciclo de Vida de Sesión UserAccessControl</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Ciclo de Vida de Sesión UserAccessControl]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Dtos/Core/UserAccessControlDto.cs (1-18) •
+          SSO.BusinessLayer/Services/Authentication/AuthService.cs (59-69)
+        </div>
+
+        <h2>Creación de Sesión y Vinculación de Token</h2>
+        <p>Cuando la autenticación tiene éxito, el sistema crea un registro UserAccessControl y genera un token JWT:</p>
+
+        <ul class="list-none pl-0 space-y-4">
+          <li>
+            <strong>Crear UserAccessControl:</strong> Se crea una nueva entidad UserAccessControl con un Guid recién
+            generado como UniqueId, el UserId del usuario autenticado, el ApplicationId de la aplicación solicitante y
+            una marca de tiempo ExpireAt que coincide con el tiempo de vida del JWT.
+          </li>
+          <li>
+            <strong>Generar JWT con JTI:</strong> El UniqueId se incrusta en el JWT como el claim JTI (JWT ID), creando
+            una vinculación criptográfica entre el token y el registro de sesión en la base de datos.
+          </li>
+          <li>
+            <strong>Guardar en Base de Datos:</strong> La entidad UserAccessControl se persiste en la base de datos vía
+            UserAccessControlService.AddAsync.
+          </li>
+        </ul>
+        <p class="mt-4">
+          El método <code>AuthService._GenerateJwtToken</code> construye el JWT con claims incluyendo el
+          UserAccessControl.UniqueId como JTI.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Authentication/AuthService.cs (85-111)
+        </div>
+
+        <h2>Validación de Sesión en Solicitudes API</h2>
+        <p>Cada solicitud API autenticada valida el token JWT y verifica la sesión UserAccessControl correspondiente:
+        </p>
+        <ul class="list-disc pl-6 space-y-2">
+          <li><strong>Extraer Token:</strong> El middleware extrae el JWT del encabezado Authorization: Bearer</li>
+          <li><strong>Validar Firma JWT:</strong> La validación criptográfica asegura la integridad del token</li>
+          <li><strong>Extraer Claim JTI:</strong> Leer el UserAccessControl.UniqueId del claim JTI del JWT</li>
+          <li><strong>Consultar Sesión:</strong> AuthService.GetAuthUser consulta UserAccessControl donde UniqueId
+            coincide con JTI</li>
+          <li><strong>Validar Expiración:</strong> Verificar si UserAccessControl.ExpireAt > DateTime.Now</li>
+        </ul>
+        <p>Si la validación falla en cualquier paso, el sistema retorna 401 Unauthorized.</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Authentication/AuthService.cs (36-49)
+        </div>
+
+        <h2>Limpieza de Sesiones</h2>
+        <p>El sistema realiza dos tipos de limpieza de sesiones:</p>
+
+        <h3>Limpieza Automática al Iniciar Sesión</h3>
+        <p>
+          El método <code>UserAccessControlService.RemoveOldLogins(userId, applicationId)</code> elimina sesiones
+          expiradas durante el proceso de inicio de sesión, previniendo la acumulación de registros de sesión obsoletos.
+          Esto asegura que los usuarios no tengan múltiples sesiones activas para la misma aplicación.
+        </p>
+
+        <h3>Cierre de Sesión Manual</h3>
+        <p>
+          El endpoint de logout elimina explícitamente la entidad UserAccessControl de la base de datos. El método
+          AuthService.GetAuthUser recupera el registro de sesión usando el claim JTI del JWT, luego el controlador lo
+          elimina y guarda los cambios.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Authentication/AuthController.cs (242-271, 190-215)
+        </div>
+
+        <h2>Generación y Estructura de Token JWT</h2>
+        <p>
+          El sistema SSO genera tokens JWT que contienen claims de identidad del usuario e información de sesión. El
+          método <code>AuthService._GenerateJwtToken</code> construye tokens que se vinculan a registros de sesión
+          UserAccessControl específicos.
+        </p>
+
+        <h3>Estructura de Claims JWT</h3>
+        <p>El JWT contiene los siguientes claims estándar y personalizados:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo de Claim</th>
+              <th>Nombre JWT</th>
+              <th>Origen</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ClaimTypes.NameIdentifier</td>
+              <td>nameid</td>
+              <td>User.Id</td>
+              <td>Identificador primario del usuario</td>
+            </tr>
+            <tr>
+              <td>JwtRegisteredClaimNames.GivenName</td>
+              <td>given_name</td>
+              <td>Person.FirstName + LastName</td>
+              <td>Nombre completo del usuario</td>
+            </tr>
+            <tr>
+              <td>JwtRegisteredClaimNames.UniqueName</td>
+              <td>unique_name</td>
+              <td>User.Username</td>
+              <td>Nombre de usuario para visualización</td>
+            </tr>
+            <tr>
+              <td>JwtRegisteredClaimNames.NameId</td>
+              <td>nameid</td>
+              <td>User.Id</td>
+              <td>Claim de ID de usuario duplicado</td>
+            </tr>
+            <tr>
+              <td>Personalizado: ApplicationId</td>
+              <td>ApplicationId</td>
+              <td>UserAccessControl.ApplicationId</td>
+              <td>ID de aplicación con alcance</td>
+            </tr>
+            <tr>
+              <td>JwtRegisteredClaimNames.Sub</td>
+              <td>sub</td>
+              <td>Person.Email</td>
+              <td>Asunto (correo electrónico)</td>
+            </tr>
+            <tr>
+              <td>JwtRegisteredClaimNames.Jti</td>
+              <td>jti</td>
+              <td>UserAccessControl.UniqueId</td>
+              <td>ID de rastreo de sesión</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Proceso de Construcción de Token JWT</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Proceso de Construcción de Token JWT]
+        </div>
+
+        <h3>Configuración de Token</h3>
+        <p>Los tokens JWT se configuran con:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>Clave de Firma:</strong> Recuperada de Configuration["Jwt:Key"], convertida a SymmetricSecurityKey
+          </li>
+          <li><strong>Algoritmo de Firma:</strong> HmacSha256 vía SigningCredentials</li>
+          <li><strong>Emisor:</strong> De Configuration["Jwt:Issuer"]</li>
+          <li><strong>Audiencia:</strong> De Configuration["Jwt:Audience"]</li>
+          <li><strong>Expiración:</strong> Calculada basada en la configuración de tiempo de vida del token</li>
+        </ul>
+        <p>
+          El JwtSecurityTokenHandler serializa el token en una cadena codificada en Base64 que los clientes incluyen en
+          solicitudes subsecuentes como Authorization: Bearer {token}.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Authentication/AuthService.cs (85-111)
+        </div>
+
+        <h3>Vinculación Token-a-Sesión vía Claim JTI</h3>
+        <p>
+          El claim JTI (JWT ID) proporciona el vínculo crítico entre tokens JWT y registros de sesión en la base de
+          datos:
+        </p>
+        <ul class="list-disc pl-6 space-y-2">
+          <li><strong>Durante la Creación del Token:</strong> El UserAccessControl.UniqueId (un Guid) se incrusta como
+            el claim JTI en el JWT</li>
+          <li><strong>Durante la Validación:</strong> El método AuthService.GetAuthUser extrae el claim JTI de
+            solicitudes entrantes y consulta UserAccessControl WHERE UniqueId = JTI</li>
+          <li><strong>Revocación de Sesión:</strong> Eliminar el registro UserAccessControl invalida inmediatamente el
+            JWT, incluso si el token no ha expirado criptográficamente</li>
+        </ul>
+        <p>
+          Esta arquitectura habilita el control de sesión del lado del servidor mientras mantiene los beneficios sin
+          estado de los tokens JWT. Las aplicaciones pueden revocar sesiones eliminando registros UserAccessControl sin
+          necesidad de listas negras de tokens.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Authentication/AuthService.cs (36-49, 85-111)
+        </div>
+
+        <h2>Estructura de Respuesta de Autenticación</h2>
+        <p>
+          Tras una autenticación exitosa, el sistema retorna un objeto LoginResponse conteniendo información de sesión y
+          el token JWT.
+        </p>
+
+        <h3>Respuesta de Login Estándar</h3>
+        <p>El LoginResponse retornado por AuthService.LoginInfo contiene:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th>
+              <th>Tipo</th>
+              <th>Origen</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>UserId</td>
+              <td>int</td>
+              <td>User.Id</td>
+              <td>Identificador del usuario autenticado</td>
+            </tr>
+            <tr>
+              <td>AccessToken</td>
+              <td>string</td>
+              <td>JWT generado</td>
+              <td>Token Bearer para solicitudes API</td>
+            </tr>
+            <tr>
+              <td>CompleteName</td>
+              <td>string</td>
+              <td>Person.FirstName + LastName</td>
+              <td>Nombre de visualización del usuario</td>
+            </tr>
+            <tr>
+              <td>ExpireAt</td>
+              <td>DateTime</td>
+              <td>UserAccessControl.ExpireAt</td>
+              <td>Marca de tiempo de expiración del token</td>
+            </tr>
+            <tr>
+              <td>Username</td>
+              <td>string</td>
+              <td>User.Username</td>
+              <td>Nombre de usuario de login</td>
+            </tr>
+            <tr>
+              <td>ResetPassword</td>
+              <td>bool</td>
+              <td>User.ResetPassword</td>
+              <td>Bandera de restablecimiento de contraseña requerido</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Los clientes usan el AccessToken en solicitudes subsecuentes como Authorization: Bearer {AccessToken}. La
+          marca de tiempo ExpireAt permite a los clientes refrescar tokens proactivamente antes de la expiración.
+        </p>
+
+        <h3>Respuesta Mejorada Servidor-a-Servidor</h3>
+        <p>El endpoint ServerLogin retorna datos adicionales para aplicaciones de servidor vía
+          ServerToServerLoginResponse:</p>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Estructura de Respuesta Mejorada]
+        </div>
+
+        <p>La respuesta mejorada incluye:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>AccessToken:</strong> Información del token con tipo bearer</li>
+          <li><strong>User:</strong> UserDto completo con información de persona mapeado vía AutoMapper</li>
+          <li><strong>ClientInfo:</strong> Estructura de menú de aplicación precargada y permisos de usuario</li>
+        </ul>
+        <p>
+          Esto elimina llamadas API subsecuentes para datos de menú y permisos, optimizando flujos de trabajo de
+          autenticación servidor-a-servidor.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Authentication/AuthService.cs (72-83) •
+          SSO.Api/Controllers/Authentication/AuthController.cs (217-240)
+        </div>
+
+        <h2>Resumen del Flujo de Autenticación</h2>
+        <p>El flujo de autenticación completo sigue estas etapas:</p>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo de Autenticación de Extremo a Extremo]
+        </div>
+
+        <p>Características clave del flujo de autenticación:</p>
+        <ul class="list-disc pl-6 space-y-2">
+          <li><strong>Validación de Múltiples Etapas:</strong> Cada etapa filtra intentos de autenticación inválidos
+            antes de proceder a operaciones más costosas</li>
+          <li><strong>Rutas de Autenticación Duales:</strong> Los usuarios internos y externos siguen diferentes rutas
+            de validación de credenciales basadas en User.IsExternal</li>
+          <li><strong>Rastreo de Sesiones:</strong> Cada autenticación exitosa crea un registro UserAccessControl que se
+            vincula al JWT vía el claim JTI</li>
+          <li><strong>Aplicación de Restablecimiento de Contraseña:</strong> Los usuarios con ResetPassword = true deben
+            cambiar su contraseña antes de acceder a las aplicaciones</li>
+          <li><strong>Sesiones con Alcance de Aplicación:</strong> Las sesiones están vinculadas a aplicaciones
+            específicas vía UserAccessControl.ApplicationId</li>
+        </ul>
+        <p>
+          El flujo de autenticación produce un token JWT que los clientes usan para todas las solicitudes API
+          subsecuentes, con el claim JTI del token habilitando la validación y revocación de sesiones del lado del
+          servidor.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Authentication/AuthController.cs (48-115)
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

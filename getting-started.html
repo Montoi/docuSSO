@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Overview</div>
+
+      <h1>Primeros Pasos</h1>
+
+      <section class="prose prose-invert max-w-none">
+        <p>
+          Esta página guía a los desarrolladores a través de la configuración inicial, configuración, inicialización de
+          la base de datos y ejecución por primera vez del sistema SSO. Cubre la instalación de requisitos previos,
+          configuración de archivos de configuración, migraciones de Entity Framework Core y pasos de verificación para
+          confirmar que la aplicación se está ejecutando correctamente.
+        </p>
+        <p>
+          Para una descripción general de la arquitectura y patrones de diseño del sistema, consulte <a
+            href="system-architecture.html" class="text-accent hover:underline">Arquitectura del Sistema</a>. Para
+          información detallada sobre el esquema de la base de datos, consulte <a href="core-database-schema.html"
+            class="text-accent hover:underline">Esquema de Base de Datos Principal</a>.
+        </p>
+
+        <h2>Requisitos Previos</h2>
+        <p>Antes de configurar el sistema SSO, asegúrese de que el siguiente software esté instalado en su máquina de
+          desarrollo:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Componente</th>
+              <th>Versión</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>.NET SDK</td>
+              <td>5.0</td>
+              <td>Framework de tiempo de ejecución y compilación</td>
+            </tr>
+            <tr>
+              <td>SQL Server</td>
+              <td>2016+</td>
+              <td>Motor de base de datos (LocalDB, Express o edición completa)</td>
+            </tr>
+            <tr>
+              <td>Visual Studio / VS Code</td>
+              <td>2019+ / Última</td>
+              <td>IDE con soporte para .NET 5.0</td>
+            </tr>
+            <tr>
+              <td>Entity Framework Core CLI</td>
+              <td>5.0.9</td>
+              <td>Herramientas de migración de base de datos</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Paquetes NuGet -->
+        <div class="bg-bg-surface border border-border-dark p-4 rounded-md my-6">
+          <h4 class="mt-0 text-sm font-semibold uppercase text-text-secondary">Paquetes NuGet Clave</h4>
+          <ul class="text-sm space-y-2 mt-2">
+            <li><code class="text-accent">Microsoft.EntityFrameworkCore.SqlServer</code> (5.0.9) - Proveedor DB</li>
+            <li><code class="text-accent">Microsoft.AspNetCore.Authentication.JwtBearer</code> (5.0.9) - Auth JWT</li>
+            <li><code class="text-accent">BCrypt.Net-Next</code> (4.0.2) - Hashing</li>
+            <li><code class="text-accent">MailKit</code> (2.14.0) - Email</li>
+            <li><code class="text-accent">Swashbuckle.AspNetCore</code> (6.1.5) - Docs API</li>
+          </ul>
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/SSO.Api.csproj (1-46)
+        </div>
+
+        <h2>Estructura de la Solución</h2>
+        <p>El sistema SSO está organizado en cinco proyectos principales con clara separación de responsabilidades:</p>
+
+        <!-- Diagram Placeholder -->
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama de Estructura de Solución]
+        </div>
+
+        <h3>Responsabilidades Clave</h3>
+        <ul>
+          <li><strong>SSO.Api:</strong> Endpoints HTTP, pipeline de middleware, DI y migraciones.</li>
+          <li><strong>SSO.BusinessLayer:</strong> Servicios de negocio, DTOs, validaciones y mapeos.</li>
+          <li><strong>SSO.DataModel:</strong> Entidades EF, Contexto y Repositorios.</li>
+          <li><strong>SSO.Core:</strong> Clases base, interfaces y extensiones compartidas.</li>
+          <li><strong>SSO.Services:</strong> Integraciones externas (LDAP, SMTP).</li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/SSO.Api.csproj (34-39)
+        </div>
+
+        <h2>Configuración de Ajustes</h2>
+        <p>El sistema requiere un archivo <code>appsettings.json</code> en la raíz de <code>SSO.Api</code>.</p>
+
+        <h3>1. ConnectionStrings</h3>
+        <pre><code class="language-json">"ConnectionStrings": {
+  "MainDatabase": "Server=localhost;Database=SsoDB;Integrated Security=true;"
+}</code></pre>
+        <p class="text-sm mb-4">Para Azure SQL, asegúrese de incluir
+          <code>Encrypt=True;TrustServerCertificate=False;</code>.</p>
+
+        <h3>2. Configuración JWT</h3>
+        <pre><code class="language-json">"Jwt": {
+  "Key": "YourSecretKeyMinimum256BitsLongForHS256Algorithm",
+  "Issuer": "https://your-sso-api.com",
+  "Audience": "https://your-sso-api.com"
+}</code></pre>
+
+        <h3>3. MailSettings</h3>
+        <pre><code class="language-json">"MailSettings": {
+  "Host": "smtp.gmail.com",
+  "Port": 587,
+  "Username": "noreply@yourdomain.com",
+  "Password": "yourpassword",
+  ...
+}</code></pre>
+
+        <h3>4. ActiveDirectorySettings</h3>
+        <pre><code class="language-json">"ActiveDirectorySettings": {
+  "Path": "LDAP://your-dc.yourdomain.local",
+  "Domain": "YOURDOMAIN",
+  "Container": "DC=yourdomain,DC=local"
+}</code></pre>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/StartupExtension.cs (40-246)
+        </div>
+
+        <h2>Configuración de la Base de Datos</h2>
+
+        <h3>Estrategia de Migración</h3>
+        <p>El sistema utiliza migraciones Code-First. La migración inicial ya incluye el esquema completo y datos
+          semilla.</p>
+
+        <h3>Ejecución de Migraciones</h3>
+        <ol class="list-decimal pl-6 space-y-4 mb-6 text-text-primary">
+          <li>
+            <strong>Verificar Cadena de Conexión:</strong> Revise <code>appsettings.json</code>.
+          </li>
+          <li>
+            <strong>Aplicar Migración:</strong> Ejecute en la terminal:
+            <pre class="mt-2 text-xs">dotnet ef database update --project SSO.Api --startup-project SSO.Api</pre>
+          </li>
+          <li>
+            <strong>Verificar Creación:</strong> Confirme que existan los esquemas <code>Core</code>,
+            <code>General</code> y <code>System</code> en SQL Server.
+          </li>
+        </ol>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Migrations/* • SSO.DataModel/Context/MainDbContext.cs
+        </div>
+
+        <h2>Ejecución de la Aplicación</h2>
+
+        <h3>Perfiles de Lanzamiento</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Perfil</th>
+              <th>Método</th>
+              <th>URL</th>
+              <th>Swagger</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>IIS Express</td>
+              <td>Hosting IIS</td>
+              <td>https://localhost:44323</td>
+              <td>Automático</td>
+            </tr>
+            <tr>
+              <td>SSO.Api</td>
+              <td>Kestrel</td>
+              <td>https://localhost:44232</td>
+              <td>Automático</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Inicio mediante .NET CLI</h3>
+        <pre><code class="language-bash">cd SSO.Api
+dotnet run</code></pre>
+
+        <h2>Verificación de la Configuración</h2>
+
+        <h3>Verificación de Swagger UI</h3>
+        <p>Al acceder a <code>/swagger</code>, debería ver la interfaz completa con:</p>
+        <ul>
+          <li>Título: "SSO.API v3"</li>
+          <li>Botón verde "Authorize" para tokens JWT.</li>
+        </ul>
+
+        <!-- Diagram Placeholder -->
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Interfaz de Swagger UI]
+        </div>
+
+        <h3>Problemas Comunes</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Error</th>
+              <th>Causa</th>
+              <th>Solución</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SqlException</td>
+              <td>Conexión fallida</td>
+              <td>Verificar servicio SQL y ConnectionString</td>
+            </tr>
+            <tr>
+              <td>Database operation failed</td>
+              <td>Migraciones pendientes</td>
+              <td>Ejecutar <code>dotnet ef database update</code></td>
+            </tr>
+            <tr>
+              <td>Failed to bind address</td>
+              <td>Puerto en uso</td>
+              <td>Cambiar puerto en <code>launchSettings.json</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

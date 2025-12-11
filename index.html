@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Base UI Overview (Clone)</title>
+  <title>Overview - SSO Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -13,20 +13,27 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            'body': 'oklch(0.98 0.001 264)',
-            'primary': 'oklch(0.12 0.02 264 / 0.9)',
-            'link': 'oklch(0.45 0.2 264)',
-            'code': '#ffffff',
-          },
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
           fontFamily: {
-            'sans': ['"Unica 77"', 'Inter', 'system-ui', 'sans-serif'],
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
           },
           spacing: {
-            'sidebar': '250px',
-            'main': '768px',
+            'sidebar': '300px',
           }
         },
       }
@@ -35,14 +42,56 @@
   <style type="text/tailwindcss">
     @layer base {
         body {
-          @apply bg-body text-primary font-sans antialiased;
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
         }
-      }
-      /* Custom Utilities */
-      .sidebar-grid {
-          display: grid;
-          grid-template-columns: 250px minmax(0, 1fr);
-          min-height: 100vh;
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
       }
     </style>
 </head>
@@ -51,9 +100,9 @@
 
   <!-- Mobile Header -->
   <header
-    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-50">
-    <span class="font-bold text-lg tracking-tight">Base UI</span>
-    <button id="mobile-menu-btn" class="text-gray-500 hover:text-primary p-2">
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -66,78 +115,273 @@
   <div class="flex min-h-screen relative">
     <!-- Sidebar -->
     <nav id="sidebar"
-      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-gray-100/50 p-6 bg-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block shadow-xl lg:shadow-none">
-      <div class="mb-8 hidden lg:block">
-        <span class="font-bold text-xl tracking-tight text-gray-900">Base UI</span>
-      </div>
-      <ul class="space-y-1 text-sm font-medium">
-        <li>
-          <a href="index.html"
-            class="block px-3 py-2 text-primary bg-gray-100 rounded-md transition-colors">Overview</a>
-        </li>
-        <li>
-          <a href="quick-start.html"
-            class="block px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Quick
-            start</a>
-        </li>
-        <li>
-          <a href="introduction.html"
-            class="block px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Introduction</a>
-        </li>
-        <li>
-          <a href="#"
-            class="block px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Browser
-            support</a>
-        </li>
-
-        <li class="pt-6 pb-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Components</li>
-
-        <li>
-          <a href="accordion.html"
-            class="block px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Accordion</a>
-        </li>
-        <li>
-          <a href="#"
-            class="block px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">AlertDialog</a>
-        </li>
-      </ul>
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-1 lg:ml-sidebar max-w-main mx-auto pt-8 pb-32 px-6">
-      <article class="prose prose-slate max-w-none">
-        <div class="mb-2 text-sm text-gray-500 font-medium">Overview</div>
-        <h1 class="text-[30px] font-medium tracking-tight mb-4">Overview</h1>
-        <p class="text-[16px] leading-7 text-gray-600 mb-8">
-          Base UI is a library of unstyled React components and hooks. It provides a robust foundation for creating your
-          own custom design system.
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Overview</div>
+
+      <h1>Descripción General</h1>
+
+      <section class="prose prose-invert max-w-none">
+        <p>
+          Este documento proporciona una descripción general completa del sistema SSO, una solución centralizada de
+          Single Sign-On (SSO) que gestiona la autenticación de usuarios, la gestión de módulos de aplicaciones y el
+          control de acceso multi-tenant. El sistema permite que múltiples aplicaciones cliente compartan un pool común
+          de usuarios mientras mantienen estructuras de permisos aisladas a través de módulos de aplicación jerárquicos
+          y control de acceso basado en roles.
+        </p>
+        <p>
+          Para información detallada sobre componentes específicos, consulte:
+          <a href="system-architecture.html" class="text-accent hover:underline">Arquitectura del Sistema</a>,
+          <a href="core-database-schema.html" class="text-accent hover:underline">Esquema de Base de Datos
+            Principal</a>,
+          <a href="authentication-flow.html" class="text-accent hover:underline">Autenticación y Autorización</a>,
+          <a href="repository-pattern.html" class="text-accent hover:underline">Capa de Acceso a Datos</a>,
+          <a href="user-management-apis.html" class="text-accent hover:underline">Controladores API</a>,
+          <a href="user-person-services.html" class="text-accent hover:underline">Servicios de Negocio</a> y
+          <a href="startup-configuration.html" class="text-accent hover:underline">Configuración e Infraestructura</a>.
         </p>
 
-        <h2 class="text-[20px] font-medium mt-12 mb-4">Introduction</h2>
-        <p class="mb-4 text-gray-600">
-          Base UI is designed to be fully accessible and customizable. It doesn't ship with any styles, giving you
-          complete freedom to style components as you see fit.
-        </p>
+        <h2>Propósito y Alcance del Sistema</h2>
+        <p>El sistema SSO sirve como una plataforma centralizada de autenticación y autorización que soporta escenarios
+          multi-tenant donde múltiples aplicaciones pueden registrarse y definir sus propios:</p>
 
-        <h2 class="text-[20px] font-medium mt-12 mb-4">Why use Base UI?</h2>
-        <ul class="list-disc pl-5 space-y-2 text-gray-600 mb-8">
-          <li><strong>Unstyled:</strong> No CSS to override. Bring your own styles.</li>
-          <li><strong>Accessible:</strong> WAI-ARIA compliant out of the box.</li>
-          <li><strong>Headless:</strong> Complete logic and state management without UI constraints.</li>
+        <ul class="space-y-2">
+          <li><strong>Autenticación de usuarios:</strong> a través de validación de credenciales de doble ruta (LDAP de
+            Active Directory para usuarios internos, contraseñas hasheadas con BCrypt para usuarios externos).</li>
+          <li><strong>Módulos de aplicación jerárquicos:</strong> con relaciones padre-hijo auto-referenciadas que
+            soportan profundidad de anidamiento ilimitada.</li>
+          <li><strong>Resolución de permisos de doble ruta:</strong> combinando permisos directos de usuario y
+            asignaciones de roles basadas en grupos con codificación de permisos por bits.</li>
+          <li><strong>Gestión de sesiones basada en JWT:</strong> usando la entidad <code>UserAccessControl</code> con
+            tokens de tiempo limitado con alcance por aplicación.</li>
+          <li><strong>Flujos de trabajo automatizados:</strong> de solicitudes de acceso a través de entidades
+            <code>ApplicationAccessRequest</code> con seguimiento de estado y notificaciones por correo electrónico.
+          </li>
+          <li><strong>Aislamiento multi-tenant:</strong> donde cada entidad Application mantiene grupos, módulos y
+            permisos separados mientras comparte el pool común de usuarios.</li>
         </ul>
 
-        <div class="bg-blue-50 border border-blue-100 rounded-md p-4 mt-8">
-          <h3 class="text-blue-900 font-medium mb-2">Ready to start?</h3>
-          <p class="text-blue-800 text-sm mb-4">Follow our quick start guide to install Base UI in your project.</p>
-          <a href="quick-start.html"
-            class="inline-block bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-black transition-colors">Go
-            to Quick Start</a>
+        <p>El sistema está construido en .NET 5.0 con Entity Framework Core 5.0.9, usando SQL Server como base de datos
+          principal. La base de código está organizada en cuatro proyectos principales: <code>SSO.Api</code> (capa de
+          presentación), <code>SSO.BusinessLayer</code> (lógica de negocio), <code>SSO.DataModel</code> (acceso a datos)
+          y <code>SSO.Services</code> (integraciones externas).</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Startup.cs (17-60) • SSO.Api/SSO.Api.csproj (1-45) • SSO.DataModel/Context/MainDbContext.cs (17-133)
         </div>
 
-      </article>
+        <h2>Arquitectura del Sistema - Vista por Capas</h2>
+        <p>El sistema sigue una arquitectura clásica de n-capas con clara separación de responsabilidades a través de
+          cuatro capas principales:</p>
+
+        <!-- Diagram Placeholder -->
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama de Arquitectura por Capas]
+        </div>
+
+        <p>La <strong>Capa de Presentación</strong> (SSO.Api) expone endpoints de API REST a través de controladores y
+          configura el pipeline de middleware incluyendo autenticación JWT, políticas CORS y documentación Swagger. La
+          <strong>Capa de Negocio</strong> (SSO.BusinessLayer) implementa la lógica de dominio principal a través de
+          servicios, valida datos usando FluentValidation, mapea entre entidades y DTOs usando AutoMapper y orquesta
+          flujos de trabajo. La <strong>Capa de Datos</strong> (SSO.DataModel) implementa el patrón Repositorio con
+          <code>BaseRepository&lt;T&gt;</code> y <code>FileBaseRepository&lt;T&gt;</code>, gestiona operaciones de base
+          de datos a través de <code>MainDbContext</code> y define configuraciones de entidades. Los <strong>Servicios
+            Externos</strong> (SSO.Services) proporcionan integraciones con Active Directory, servidores SMTP y
+          almacenamiento del sistema de archivos.</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/StartupExtension.cs (40-246) • SSO.DataModel/Context/MainDbContext.cs (17-133) • SSO.Api/Startup.cs
+          (25-60)
+        </div>
+
+        <h2>Modelo de Dominio Principal - Relaciones de Entidades</h2>
+        <p>El modelo de dominio se centra en tres agregados clave: <code>Application</code>, <code>User</code> y
+          <code>ApplicationModule</code>. Las aplicaciones definen estructuras de módulos jerárquicos, los usuarios se
+          autentican y reciben permisos, y el modelo de permisos soporta tanto asignaciones directas de usuario como
+          control de acceso basado en grupos.</p>
+        <p>La relación <code>Person-User-Employee</code> separa responsabilidades: <code>Person</code> contiene datos
+          demográficos, <code>User</code> maneja la autenticación y <code>Employee</code> gestiona relaciones
+          organizacionales.</p>
+
+        <h2>Descripción General de Autenticación y Autorización</h2>
+        <p>El flujo de autenticación implementa validación de credenciales de doble ruta: los usuarios internos
+          (IsExternal=false) usan contraseñas hasheadas con BCrypt, mientras que los usuarios externos delegan a Active
+          Directory.</p>
+
+        <div class="bg-bg-surface border border-border-dark p-4 rounded-md my-4">
+          <h4 class="mt-0 text-sm font-semibold uppercase text-text-secondary">Resolución de Permisos</h4>
+          <p class="text-sm mt-2">El flujo de autorización opera en dos niveles:</p>
+          <ol class="list-decimal pl-5 space-y-1 text-sm mt-2">
+            <li>Validación JWT asegura que el usuario esté autenticado.</li>
+            <li>Consultas de acceso a módulos implementan RBAC de grano fino.</li>
+          </ol>
+          <p class="text-sm mt-2 text-text-secondary">Los usuarios regulares consultan
+            <code>ApplicationModuleAccess</code> donde
+            <code>(UserId = X OR GroupId IN user.Groups) AND PermissionValue > 0</code>.</p>
+        </div>
+
+        <h2>Estructura del Proyecto y Componentes Clave</h2>
+
+        <h3>Proyectos</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Proyecto</th>
+              <th>Propósito</th>
+              <th>Componentes Clave</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SSO.Api</td>
+              <td>Capa de presentación</td>
+              <td>Controladores, Middleware, Startup, Migraciones</td>
+            </tr>
+            <tr>
+              <td>SSO.BusinessLayer</td>
+              <td>Lógica de negocio</td>
+              <td>Servicios, DTOs, AutoMapper, FluentValidation</td>
+            </tr>
+            <tr>
+              <td>SSO.DataModel</td>
+              <td>Acceso a datos</td>
+              <td>MainDbContext, Entidades, Repositorios</td>
+            </tr>
+            <tr>
+              <td>SSO.Services</td>
+              <td>Integraciones externas</td>
+              <td>ActiveDirectoryService, MailService</td>
+            </tr>
+            <tr>
+              <td>SSO.Core</td>
+              <td>Infraestructura compartida</td>
+              <td>Clases base, interfaces</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Controladores y Servicios Clave</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Controlador</th>
+              <th>Servicio</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>AuthController</td>
+              <td>AuthService</td>
+              <td>Login, logout, JWT</td>
+            </tr>
+            <tr>
+              <td>UserController</td>
+              <td>UserService</td>
+              <td>CRUD usuarios, Sync AD</td>
+            </tr>
+            <tr>
+              <td>ApplicationController</td>
+              <td>ApplicationService</td>
+              <td>Módulos y permisos</td>
+            </tr>
+            <tr>
+              <td>FileController</td>
+              <td>FileDirectoryService</td>
+              <td>Gestión de archivos</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/StartupExtension.cs • SSO.Api/SSO.Api.csproj
+        </div>
+
+        <h2>Stack Tecnológico</h2>
+        <ul class="space-y-4">
+          <li>
+            <strong>Framework y Runtime:</strong> .NET 5.0, ASP.NET Core 5.0, Entity Framework Core 5.0.9 (SQL Server).
+          </li>
+          <li>
+            <strong>Autenticación y Seguridad:</strong> JWT Bearer 5.0.9, BCrypt.Net-Next 4.0.2, Active Directory/LDAP
+            Integration.
+          </li>
+          <li>
+            <strong>Integraciones Externas:</strong> MailKit 2.14.0 (SMTP), Swagger/OpenAPI (Swashbuckle 6.1.5).
+          </li>
+          <li>
+            <strong>Herramientas:</strong> FluentValidation.AspNetCore, AutoMapper, StructureMap (Legado).
+          </li>
+        </ul>
+
+        <h2>Sistema Multi-Tenant de Módulos de Aplicación</h2>
+        <p>El sistema soporta escenarios multi-tenant donde cada entidad <code>Application</code> define su propia
+          jerarquía de módulos. Ejemplo: Aplicación SISPLAN (Id=1002).</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Módulo</th>
+              <th>Orden</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dashboard</td>
+              <td>1</td>
+              <td>Punto de entrada</td>
+            </tr>
+            <tr>
+              <td>Instrumentos de Referencia</td>
+              <td>2</td>
+              <td>END, ODS, Políticas</td>
+            </tr>
+            <tr>
+              <td>PNPSP</td>
+              <td>3</td>
+              <td>Plan plurianual nacional</td>
+            </tr>
+            <tr>
+              <td>Planificación Estratégica</td>
+              <td>4</td>
+              <td>PEI, Indicadores</td>
+            </tr>
+            <tr>
+              <td>POA</td>
+              <td>5</td>
+              <td>Planificación operativa anual</td>
+            </tr>
+            <tr>
+              <td>Sistema</td>
+              <td>9</td>
+              <td>Administración, Configuraciones</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Flujos de Trabajo de Procesamiento de Solicitudes</h2>
+        <p>El sistema implementa flujos de trabajo de aprobación automatizados a través de
+          <code>ApplicationAccessRequest</code>.</p>
+        <ul class="space-y-2">
+          <li><strong>Registro de Nuevo Usuario:</strong> <code>UserRequest</code> captura datos demográficos. Tras
+            aprobación crea <code>Person</code> y <code>User</code>.</li>
+          <li><strong>Solicitudes de Acceso:</strong> Usuarios existentes solicitan acceso a nuevas aplicaciones.</li>
+          <li><strong>Notificaciones:</strong> Generación de correos HTML mediante plantillas del sistema.</li>
+          <li><strong>Archivos:</strong> Validación y almacenamiento seguro con `FileDirectoryService`.</li>
+        </ul>
+
+      </section>
     </main>
-
-
   </div>
 
   <script src="./main.js"></script>

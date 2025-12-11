@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Authentication and Authorization - SSO Documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+                    fontFamily: {
+                        'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+                    },
+                    spacing: {
+                        'sidebar': '300px',
+                    }
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+    <!-- Mobile Header -->
+    <header
+        class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+        <span class="font-bold text-lg text-white">SSO Docs</span>
+        <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+    </header>
+
+    <div class="flex min-h-screen relative">
+        <!-- Sidebar -->
+        <nav id="sidebar"
+            class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+            <!-- Content populated by main.js -->
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+            <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Architecture</div>
+
+            <h1>Autenticación y Autorización</h1>
+
+            <section class="prose prose-invert max-w-none">
+                <p>
+                    Este documento proporciona una descripción general de los mecanismos de autenticación y autorización
+                    en el sistema SSO, explicando cómo los usuarios prueban su identidad y cómo el sistema controla el
+                    acceso a aplicaciones y módulos.
+                </p>
+
+                <p>
+                    <strong>Alcance:</strong> Esta página cubre la arquitectura de alto nivel de autenticación
+                    (verificación de identidad del usuario) y autorización (control de acceso a recursos). Para
+                    información detallada, consulte:
+                    <a href="#" class="text-accent hover:underline">Flujo de Autenticación</a>,
+                    <a href="#" class="text-accent hover:underline">Integración con Active Directory</a>,
+                    <a href="#" class="text-accent hover:underline">Sistema de Permisos</a>,
+                    <a href="#" class="text-accent hover:underline">Gestión de Contraseñas</a>.
+                </p>
+
+                <h2>Descripción General de la Arquitectura</h2>
+                <p>
+                    El sistema SSO implementa una capa de autenticación basada en JWT con autorización basada en roles
+                    de grano fino. La arquitectura soporta tanto usuarios internos (credenciales almacenadas en la base
+                    de datos) como usuarios externos (validados contra Active Directory).
+                </p>
+
+                <!-- Diagram Placeholder -->
+                <div
+                    class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+                    [Diagrama: Componentes de Autenticación y Autorización de Alto Nivel]
+                </div>
+
+                <div class="sources-box">
+                    <span class="sources-label">Fuentes:</span>
+                    SSO.Api/StartupExtension.cs (218-246) • SSO.Api/Startup.cs (59, 86-87)
+                </div>
+
+                <h2>Mecanismos de Autenticación</h2>
+                <p>
+                    El sistema proporciona dos rutas de autenticación distintas basadas en la bandera
+                    <code>User.IsExternal</code>.
+                </p>
+
+                <h3>Validación de Credenciales de Ruta Dual</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tipo de Autenticación</th>
+                            <th>Bandera</th>
+                            <th>Validación</th>
+                            <th>Almacenamiento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Usuarios Internos</td>
+                            <td>IsExternal = false</td>
+                            <td>Hash BCrypt</td>
+                            <td>Base de datos (hasheado)</td>
+                        </tr>
+                        <tr>
+                            <td>Usuarios Externos</td>
+                            <td>IsExternal = true</td>
+                            <td>Active Directory LDAP</td>
+                            <td>No almacenado localmente</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="sources-box">
+                    <span class="sources-label">Fuentes:</span>
+                    UserController.cs (115-161) • UserService.cs (64-80)
+                </div>
+
+                <h2>Estructura del Token JWT</h2>
+                <p>
+                    El sistema utiliza JWT configurado en <code>StartupExtension.cs</code> con las siguientes
+                    características:
+                </p>
+
+                <h3>Configuración del Token</h3>
+                <ul>
+                    <li><strong>Validación de Emisor/Audiencia:</strong> Deshabilitada.</li>
+                    <li><strong>Validación de Tiempo de Vida:</strong> Habilitada.</li>
+                    <li><strong>Firma:</strong> HMAC-SHA256 con clave simétrica (<code>Configuration["Jwt:Key"]</code>).
+                    </li>
+                </ul>
+
+                <h3>Claims del Token</h3>
+                <ul>
+                    <li><code>UserId</code>: Clave primaria de la entidad User.</li>
+                    <li><code>Username</code>: Nombre de usuario.</li>
+                    <li><code>IsRoot</code>: Bandera de superusuario.</li>
+                </ul>
+
+                <h3>Orden del Pipeline de Middleware</h3>
+                <pre><code class="language-csharp">UseRouting() → UseCors() → UseAuthentication() → UseAuthorization() → MapControllers()</code></pre>
+
+                <div class="sources-box">
+                    <span class="sources-label">Fuentes:</span>
+                    StartupExtension.cs (218-246) • Startup.cs (81-92)
+                </div>
+
+                <h2>Modelo de Autorización</h2>
+                <p>
+                    Implementa RBAC jerárquico con dos rutas de resolución: bypass de superusuario y permisos de módulo
+                    de grano fino.
+                </p>
+
+                <!-- Diagram Placeholder -->
+                <div
+                    class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+                    [Diagrama: Flujo de Resolución de Permisos]
+                </div>
+
+                <h3>Valores de Permisos (Codificación Bitwise)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Permiso</th>
+                            <th>Valor</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Lectura</td>
+                            <td>1</td>
+                            <td>Ver contenido del módulo</td>
+                        </tr>
+                        <tr>
+                            <td>Escritura</td>
+                            <td>2</td>
+                            <td>Modificar contenido</td>
+                        </tr>
+                        <tr>
+                            <td>Admin</td>
+                            <td>4</td>
+                            <td>Acciones administrativas</td>
+                        </tr>
+                        <tr>
+                            <td>Gestión</td>
+                            <td>8</td>
+                            <td>Control total</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Asignación de Permisos de Ruta Dual</h3>
+                <ol class="list-decimal pl-6 space-y-1">
+                    <li>Verificar <code>User.IsRoot</code> → Si true, otorgar permiso MANAGE a todo.</li>
+                    <li>Si no, consultar <code>ApplicationModuleAccess</code> por:</li>
+                    <ul class="list-disc pl-6 mt-1">
+                        <li><code>UserId</code> (Permisos directos)</li>
+                        <li><code>GroupId</code> (Permisos heredados)</li>
+                    </ul>
+                    <li>Combinar con OR bitwise y filtrar <code>PermissionValue > 0</code>.</li>
+                </ol>
+
+                <div class="sources-box">
+                    <span class="sources-label">Fuentes:</span>
+                    ApplicationAccessRequestService.cs (114-139) • ApplicationModuleAccess.cs
+                </div>
+
+                <h2>Características de Seguridad</h2>
+
+                <h3>Mecanismos de Protección de Cuenta</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bandera</th>
+                            <th>Efecto</th>
+                            <th>Bypass</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>IsLocked</code></td>
+                            <td>Retorna 403 Forbidden</td>
+                            <td>Ninguno</td>
+                        </tr>
+                        <tr>
+                            <td><code>ResetPassword</code></td>
+                            <td>Fuerza cambio contraseña</td>
+                            <td>Ninguno</td>
+                        </tr>
+                        <tr>
+                            <td><code>IsActive</code></td>
+                            <td>Sincronizado desde AD</td>
+                            <td>Ninguno</td>
+                        </tr>
+                        <tr>
+                            <td><code>IsRoot</code></td>
+                            <td>Otorga todos los permisos</td>
+                            <td>N/A</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Orden de Evaluación</h3>
+                <ol>
+                    <li>Verificar credenciales (BCrypt o AD).</li>
+                    <li>Verificar <code>IsLocked</code>.</li>
+                    <li>Verificar <code>ResetPassword</code>.</li>
+                    <li>Crear sesión y retornar JWT.</li>
+                </ol>
+
+                <h3>Gestión de Sesión (UserAccessControl)</h3>
+                <ul>
+                    <li><strong>UniqueId:</strong> GUID criptográficamente aleatorio.</li>
+                    <li><strong>Alcance:</strong> Aislamiento por aplicación.</li>
+                    <li><strong>Expiración:</strong> Limitada por timestamp <code>ExpireAt</code>.</li>
+                </ul>
+
+                <h2>Gestión de Contraseñas</h2>
+
+                <h3>Hash con BCrypt</h3>
+                <p>Para usuarios internos (IsExternal = false):</p>
+                <pre><code class="language-csharp">// Creación/Reset:
+BCrypt.Net.BCrypt.HashPassword(_systemSettings.DefaultSystemPassword)
+// Validación:
+BCrypt.Net.BCrypt.Verify(inputPassword, storedHash)</code></pre>
+                <p>Contraseña por defecto: <code>Inicio01</code>.</p>
+
+                <h3>Sincronización con Active Directory</h3>
+                <p>Endpoint: <code>SychActiveDirectory</code></p>
+                <ol>
+                    <li>Obtener todos los usuarios de AD y lista de deshabilitados.</li>
+                    <li>Crear usuarios nuevos (IsExternal = true, Password = null).</li>
+                    <li>Mapear atributos: SamAccountName → Username, etc.</li>
+                    <li>Insertar por lotes y sincronizar estado <code>IsActive</code>.</li>
+                </ol>
+
+                <h2>Requisitos de Configuración</h2>
+
+                <h3>Ejemplo appsettings.json</h3>
+                <pre><code class="language-json">{
+  "Jwt": {
+    "Key": "symmetric-signing-key",
+    ...
+  },
+  "ActiveDirectorySettings": {
+    "Domain": "domain.local",
+    "LdapServer": "ldap://server",
+    ...
+  },
+  "SystemSettings": {
+    "DefaultSystemPassword": "Inicio01"
+  }
+}</code></pre>
+
+                <h2>Referencia de Entidades de Código</h2>
+
+                <h3>Interfaces de Servicio Clave</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Interfaz</th>
+                            <th>Implementación</th>
+                            <th>Responsabilidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>IAuthService</td>
+                            <td>AuthService</td>
+                            <td>JWT, Auth Context</td>
+                        </tr>
+                        <tr>
+                            <td>IUserService</td>
+                            <td>UserService</td>
+                            <td>CRUD, Sync AD, Passwords</td>
+                        </tr>
+                        <tr>
+                            <td>IActiveDirectoryService</td>
+                            <td>ActiveDirectoryService</td>
+                            <td>LDAP</td>
+                        </tr>
+                        <tr>
+                            <td>IPermissionService</td>
+                            <td>PermissionService</td>
+                            <td>Cálculo Permisos</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </section>
+        </main>
+    </div>
+
+    <script src="./main.js"></script>
+</body>
+
+</html>

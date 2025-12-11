@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Repository Pattern - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Data Access Layer</div>
+
+      <h1>Patrón Repositorio</h1>
+
+      <section class="prose prose-invert max-w-none">
+
+        <h2>Propósito y Alcance</h2>
+        <p>
+          La implementación del patrón repositorio abstrae las operaciones de base de datos de Entity Framework Core a
+          través de una interfaz genérica, proporcionando operaciones CRUD consistentes, validación, paginación y
+          composición de consultas para todas las entidades. La clase <code>BaseRepository&lt;TModel&gt;</code>
+          implementa la interfaz <code>IEntityBaseRepository&lt;TModel&gt;</code> con más de 40 métodos que cubren
+          patrones estándar de acceso a datos.
+        </p>
+        <p>
+          Para operaciones de metadatos de archivos usando el patrón repositorio simplificado, consulte <a
+            href="file-data-access.html" class="text-accent hover:underline">Acceso a Datos de Archivos</a>. Para la
+          integración de validación con repositorios, consulte <a href="validation-framework.html"
+            class="text-accent hover:underline">Framework de Validación</a>. Para detalles sobre relaciones entre
+          entidades, consulte <a href="core-database-schema.html" class="text-accent hover:underline">Esquema de Base de
+            Datos Principal</a>.
+        </p>
+
+        <h2>Descripción General de la Arquitectura del Repositorio</h2>
+        <p>
+          El patrón repositorio consiste en la interfaz <code>IEntityBaseRepository&lt;TModel&gt;</code> y la
+          implementación <code>BaseRepository&lt;TModel&gt;</code>. Los servicios extienden
+          <code>BaseRepository&lt;TModel&gt;</code> para heredar toda la funcionalidad de acceso a datos mientras
+          agregan lógica específica del dominio.
+        </p>
+
+        <h3>Estructura de Clases del Patrón Repositorio</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Estructura de Clases del Patrón Repositorio]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (18-33) •
+          SSO.BusinessLayer/Interfaces/Base/IEntityBaseRepository.cs (13)
+        </div>
+
+        <h2>Implementación de BaseRepository</h2>
+        <p>
+          La clase <code>BaseRepository&lt;TModel&gt;</code> se encuentra en
+          <code>SSO.BusinessLayer/Repositories/Base/BaseRepository.cs</code> y proporciona operaciones de base de datos
+          completas a través de Entity Framework Core.
+        </p>
+
+        <h3>Dependencias del Constructor</h3>
+        <pre><code class="language-csharp">public BaseRepository(DbContext context, IValidator&lt;TModel&gt; validator, IMapper mapper)</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Dependencia</th>
+              <th>Tipo</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>context</td>
+              <td>DbContext</td>
+              <td>Contexto de base de datos de Entity Framework (inyectado como MainDbContext)</td>
+            </tr>
+            <tr>
+              <td>validator</td>
+              <td>IValidator&lt;TModel&gt;</td>
+              <td>Validador de FluentValidation para validación de entidades</td>
+            </tr>
+            <tr>
+              <td>mapper</td>
+              <td>IMapper</td>
+              <td>Instancia de AutoMapper para conversiones de DTOs</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          El constructor inicializa <code>_dbSet = context.Set&lt;TModel&gt;()</code> para acceder a la tabla de la
+          entidad específica.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (28-33)
+        </div>
+
+        <h3>Categorías de Métodos del Repositorio</h3>
+        <p>El repositorio organiza más de 40 métodos en categorías funcionales:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Métodos</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Crear</td>
+              <td>Add(), AddAsync(), AddRange()</td>
+              <td>Inserción de entidades con validación</td>
+            </tr>
+            <tr>
+              <td>Leer</td>
+              <td>GetAllAsync(), FindBy(), GetAsync(), Find(), GeTModelByIdAsync()</td>
+              <td>Recuperación de entidades</td>
+            </tr>
+            <tr>
+              <td>Actualizar</td>
+              <td>Update(), UpdateEntity(), UpdateRange()</td>
+              <td>Modificación de entidades con validación</td>
+            </tr>
+            <tr>
+              <td>Eliminar</td>
+              <td>DeleteByIdAsync(), DeleteByEntity(), Remove(), RemoveRange()</td>
+              <td>Operaciones de eliminación lógica</td>
+            </tr>
+            <tr>
+              <td>Consultas</td>
+              <td>GetQueryable(), FirstOrDefaultAsync(), SingleAsync()</td>
+              <td>Construcción de consultas LINQ</td>
+            </tr>
+            <tr>
+              <td>Paginación</td>
+              <td>GetPagedAsync(), GetPaged()</td>
+              <td>Conjuntos de resultados paginados</td>
+            </tr>
+            <tr>
+              <td>Agregación</td>
+              <td>CountAsync(), SumAsync(), AnyAsync()</td>
+              <td>Operaciones de agregación</td>
+            </tr>
+            <tr>
+              <td>Transacción</td>
+              <td>Commit(), CommitAsync(), SaveAsync()</td>
+              <td>Persistencia de unidad de trabajo</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (60-502) •
+          SSO.BusinessLayer/Interfaces/Base/IEntityBaseRepository.cs (15-100)
+        </div>
+
+        <h2>Operaciones CRUD con Validación</h2>
+        <p>
+          Todas las operaciones de creación, actualización y eliminación se integran con FluentValidation antes de la
+          persistencia. Los métodos devuelven objetos <code>OperationResult</code> que contienen:
+        </p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>Success:</strong> Booleano que indica el éxito de la operación</li>
+          <li><strong>StatusCode:</strong> Código de estado HTTP (Created, OK, BadRequest, InternalServerError)</li>
+          <li><strong>Message:</strong> Cadena de mensaje de error (errores de validación concatenados)</li>
+        </ul>
+
+        <h3>Flujo de Validación en Operación Add</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo de Validación en Operación Add]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (149-159) •
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (133-147)
+        </div>
+
+        <h3>Firmas de Métodos Principales del Repositorio</h3>
+
+        <h4>Operaciones de Creación</h4>
+        <ul class="list-disc pl-6 space-y-2">
+          <li><code>Task&lt;OperationResult&gt; Add(TModel entity)</code> - Valida y luego agrega una sola entidad
+            <br><span class="text-xs text-text-secondary">BaseRepository.cs (149-159)</span></li>
+          <li><code>IEnumerable&lt;OperationResult&gt; AddRange(IEnumerable&lt;TModel&gt; entityEnumerable)</code> -
+            Adición por lotes con validación por entidad <br><span class="text-xs text-text-secondary">BaseRepository.cs
+              (161-174)</span></li>
+          <li><code>Task AddAsync(TModel entity)</code> - Adición directa sin validación <br><span
+              class="text-xs text-text-secondary">BaseRepository.cs (60-63)</span></li>
+        </ul>
+
+        <h4>Operaciones de Lectura</h4>
+        <ul class="list-disc pl-6 space-y-2">
+          <li><code>Task&lt;TModel&gt; GeTModelByIdAsync(int id)</code> - Buscar por clave primaria <br><span
+              class="text-xs text-text-secondary">BaseRepository.cs (65-66)</span></li>
+          <li><code>Task&lt;IEnumerable&lt;TModel&gt;&gt; GetAllAsync()</code> - Todas las entidades <br><span
+              class="text-xs text-text-secondary">BaseRepository.cs (77)</span></li>
+          <li><code>IQueryable&lt;TModel&gt; FindBy(Expression&lt;Func&lt;TModel, bool&gt;&gt; predicate)</code> -
+            Consulta filtrada <br><span class="text-xs text-text-secondary">BaseRepository.cs (78-82)</span></li>
+          <li><code>Task&lt;TModel&gt; FirstOrDefaultAsync(predicate, orderBy, include)</code> - Primera coincidencia
+            con carga anticipada <br><span class="text-xs text-text-secondary">BaseRepository.cs (442-453)</span></li>
+        </ul>
+
+        <h4>Operaciones de Actualización</h4>
+        <ul class="list-disc pl-6 space-y-2">
+          <li><code>OperationResult Update(TModel entity)</code> - Valida y luego actualiza, llama a
+            ModifyInnerEntities() <br><span class="text-xs text-text-secondary">BaseRepository.cs (214-226)</span></li>
+          <li><code>TModel UpdateEntity(TModel entity)</code> - Actualización directa sin validación <br><span
+              class="text-xs text-text-secondary">BaseRepository.cs (92-95)</span></li>
+        </ul>
+
+        <h4>Operaciones de Eliminación</h4>
+        <ul class="list-disc pl-6 space-y-2">
+          <li><code>Task&lt;bool&gt; DeleteByIdAsync(int id)</code> - Eliminación lógica por ID vía reflexión <br><span
+              class="text-xs text-text-secondary">BaseRepository.cs (97-104)</span></li>
+          <li><code>OperationResult Remove(TModel entity)</code> - Establece IsDeleted = true <br><span
+              class="text-xs text-text-secondary">BaseRepository.cs (206-212)</span></li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (60-273)
+        </div>
+
+        <h2>Composición de Consultas con PrepareQuery</h2>
+        <p>
+          El método protegido <code>PrepareQuery</code> habilita la construcción de consultas componibles encadenando
+          operaciones LINQ en un orden específico:
+        </p>
+        <pre><code class="language-csharp">protected IQueryable&lt;TModel&gt; PrepareQuery(
+    IQueryable&lt;TModel&gt; query,
+    Expression&lt;Func&lt;TModel, bool&gt;&gt; predicate = null,
+    Func&lt;IQueryable&lt;TModel&gt;, IIncludableQueryable&lt;TModel, object&gt;&gt; include = null,
+    Func&lt;IQueryable&lt;TModel&gt;, IOrderedQueryable&lt;TModel&gt;&gt; orderBy = null,
+    int? take = null
+)</code></pre>
+
+        <h3>Orden de Ejecución de PrepareQuery</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Orden de Ejecución de PrepareQuery]
+        </div>
+        <p>Este orden asegura:</p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li><strong>Include primero</strong> - carga anticipadamente propiedades de navegación</li>
+          <li><strong>Where segundo</strong> - filtra antes de ordenar (rendimiento)</li>
+          <li><strong>OrderBy tercero</strong> - prepara para paginación</li>
+          <li><strong>Take último</strong> - limita el conjunto de resultados</li>
+        </ol>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (37-58)
+        </div>
+
+        <h2>Paginación con DataCollection</h2>
+        <p>
+          Los métodos de paginación usan <code>PrepareQuery</code> para construir consultas y devolver objetos
+          envolventes <code>DataCollection&lt;TModel&gt;</code>:
+        </p>
+
+        <h3>Flujo del Método GetPagedAsync</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo del Método GetPagedAsync]
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>Firma</th>
+              <th>Caso de Uso</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GetPagedAsync()</td>
+              <td>Task&lt;DataCollection&lt;TModel&gt;&gt; GetPagedAsync(int page, int take, ...)</td>
+              <td>Paginación asíncrona para endpoints de API</td>
+            </tr>
+            <tr>
+              <td>GetPaged()</td>
+              <td>DataCollection&lt;TModel&gt; GetPaged(int page, int take, ...)</td>
+              <td>Paginación síncrona</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>Propiedades de DataCollection</h4>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><code>Items</code> - List&lt;TModel&gt; - Entidades de la página actual</li>
+          <li><code>Total</code> - int - Recuento total de registros que coinciden con el filtro</li>
+          <li><code>Page</code> - int - Número de página actual (basado en 1)</li>
+          <li><code>Pages</code> - int - Recuento total de páginas</li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (291-355)
+        </div>
+
+        <h2>Implementación de Eliminación Lógica</h2>
+        <p>
+          El repositorio implementa la eliminación lógica a través de reflexión para evitar la eliminación física de la
+          base de datos, preservando las pistas de auditoría.
+        </p>
+
+        <h3>Implementación de DeleteByIdAsync</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Implementación de DeleteByIdAsync]
+        </div>
+
+        <p>El método usa reflexión para localizar la propiedad <code>Borrado</code> en tiempo de ejecución:</p>
+        <pre><code class="language-csharp">var entity = await _dbSet.FindAsync(id);
+var type = entity.GetType();
+var prop = type.GetProperty("Borrado");
+prop?.SetValue(entity, true);
+return await CommitAsync();</code></pre>
+
+        <h4>Métodos Alternativos de Eliminación Lógica</h4>
+        <ul class="list-disc pl-6 space-y-2">
+          <li><code>DeleteByEntity(TModel entity)</code> - Establece Borrado vía reflexión <br><span
+              class="text-xs text-text-secondary">BaseRepository.cs (106-111)</span></li>
+          <li><code>Remove(TModel entity)</code> - Establece la propiedad IsDeleted = true <br><span
+              class="text-xs text-text-secondary">BaseRepository.cs (206-212)</span></li>
+        </ul>
+        <p>
+          El MainDbContext configura filtros de consulta globales para excluir automáticamente entidades eliminadas
+          lógicamente de todas las consultas. Consulte <a href="entity-auditing.html"
+            class="text-accent hover:underline">Auditoría de Entidades</a> para más detalles.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (97-111) •
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (206-212)
+        </div>
+
+        <h2>Gestión de Estado de Entidades Anidadas</h2>
+        <p>
+          El repositorio maneja automáticamente las relaciones de entidades anidadas durante las operaciones de
+          actualización a través del método <code>ModifyInnerEntities</code>, que establece recursivamente los estados
+          de seguimiento de cambios de EntityFramework para grafos de objetos.
+        </p>
+
+        <h3>Método Update con Manejo de Entidades Anidadas</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Método Update con Manejo de Entidades Anidadas]
+        </div>
+
+        <h3>Algoritmo Recursivo de ModifyInnerEntities</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Algoritmo Recursivo de ModifyInnerEntities]
+        </div>
+
+        <h4>Lógica de AssignEntityStateUpdate</h4>
+        <pre><code class="language-csharp">private void AssignEntityStateUpdate(IEntityBase obj)
+{
+    if (_context.ChangeTracker.Entries().Any(e => e.Entity == obj)) return;
+    _context.Entry(obj).State = obj.Id > 0 ? EntityState.Modified : EntityState.Added;
+    this.ModifyInnerEntities(obj); // Llamada recursiva
+}</code></pre>
+        <p>El algoritmo:</p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>Omite entidades ya rastreadas por ChangeTracker</li>
+          <li>Establece <code>EntityState.Modified</code> para entidades con Id > 0 (existentes)</li>
+          <li>Establece <code>EntityState.Added</code> para entidades con Id == 0 (nuevas)</li>
+          <li>Procesa recursivamente entidades anidadas</li>
+        </ol>
+        <p>
+          Esto permite actualizaciones a grafos de objetos complejos como User con colecciones anidadas de
+          ApplicationUser, UserGroup y ApplicationModuleAccess.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (214-226) •
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (236-272)
+        </div>
+
+        <h2>Gestión de Transacciones</h2>
+        <p>El repositorio proporciona control de transacciones explícito a través de métodos de commit:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>Firma</th>
+              <th>Comportamiento</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Commit()</td>
+              <td>bool Commit()</td>
+              <td>Guardado síncrono, devuelve true si cambios > 0</td>
+            </tr>
+            <tr>
+              <td>CommitAsync()</td>
+              <td>Task&lt;bool&gt; CommitAsync()</td>
+              <td>Guardado asíncrono, devuelve true si cambios > 0</td>
+            </tr>
+            <tr>
+              <td>SaveAsync()</td>
+              <td>Task&lt;OperationResult&gt; SaveAsync()</td>
+              <td>Guardado asíncrono con manejo de errores, devuelve OperationResult</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Implementación de CommitAsync</h3>
+        <pre><code class="language-csharp">public async Task&lt;bool&gt; CommitAsync()
+{
+    try
+    {
+        var savedRegistries = await _context.SaveChangesAsync();
+        bool succeeded = savedRegistries > 0;
+        return succeeded;
+    }
+    catch (Exception e)
+    {
+        Console.Write(e);
+        return false;
+    }
+}</code></pre>
+        <p>La llamada a <code>_context.SaveChangesAsync()</code> desencadena:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Sobrescritura de MainDbContext que puebla campos de auditoría (ver Auditoría de Entidades)</li>
+          <li>Detección de cambios de Entity Framework y generación de SQL</li>
+          <li>Ejecución de transacción de base de datos</li>
+        </ul>
+        <p>Los servicios típicamente usan el patrón:</p>
+        <pre><code class="language-csharp">await repository.Add(entity);
+await repository.CommitAsync(); // Persiste todos los cambios</code></pre>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (119-147) •
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (274-289)
+        </div>
+
+        <h2>Restricción de IEntityBase</h2>
+        <p>Todas las entidades usadas con <code>BaseRepository&lt;TModel&gt;</code> deben implementar la interfaz
+          <code>IEntityBase</code>:</p>
+        <pre><code class="language-csharp">public class BaseRepository&lt;TModel&gt; : IEntityBaseRepository&lt;TModel&gt; 
+    where TModel : class, IEntityBase, new()</code></pre>
+        <p>La interfaz <code>IEntityBase</code> requiere:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><code>int Id</code> - Propiedad de clave primaria</li>
+          <li><code>bool IsDeleted</code> - Bandera de eliminación lógica</li>
+        </ul>
+        <p>Esta restricción habilita:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Acceso genérico a clave primaria vía propiedad Id <span
+              class="text-xs text-text-secondary">(BaseRepository.cs 183)</span></li>
+          <li>Operaciones de eliminación lógica vía propiedad IsDeleted <span
+              class="text-xs text-text-secondary">(BaseRepository.cs 209)</span></li>
+          <li>Seguimiento de estado de entidades anidadas vía verificaciones de tipo IEntityBase <span
+              class="text-xs text-text-secondary">(BaseRepository.cs 245-256)</span></li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (18-20)
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

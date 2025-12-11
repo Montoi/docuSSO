@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Permission System - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Authentication & Authorization
+      </div>
+
+      <h1>Sistema de Permisos</h1>
+
+      <section class="prose prose-invert max-w-none">
+
+        <h2>Propósito y Alcance</h2>
+        <p>
+          El sistema de permisos controla el acceso a los módulos de aplicación utilizando un modelo de autorización de
+          doble ruta que soporta tanto permisos directos de usuario como permisos de grupo basados en roles. Este
+          documento explica la entidad <code>ApplicationModuleAccess</code>, la codificación de permisos por bits, la
+          lógica de resolución de permisos para usuarios ROOT y regulares, y las APIs para verificar el acceso a
+          módulos.
+        </p>
+        <p>
+          Para mecanismos de autenticación y tokens JWT, consulte <a href="authentication-flow.html"
+            class="text-accent hover:underline">Flujo de Autenticación</a>. Para la estructura de jerarquía de módulos
+          que los permisos controlan el acceso, consulte <a href="#" class="text-accent hover:underline">Jerarquía de
+            Módulos de Aplicación</a>.
+        </p>
+
+        <h2>Modelo de Permisos Principal</h2>
+        <p>
+          El sistema de permisos está construido alrededor de la entidad <code>ApplicationModuleAccess</code>, que crea
+          una relación de muchos a muchos entre usuarios/grupos y módulos de aplicación con valores de permisos.
+        </p>
+
+        <h3>Estructura de Entidad</h3>
+        <p>La entidad <code>ApplicationModuleAccess</code> soporta dos rutas de asignación mutuamente excluyentes:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th>
+              <th>Tipo</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>UserId</td>
+              <td>int?</td>
+              <td>Asignación directa de usuario (nullable)</td>
+            </tr>
+            <tr>
+              <td>GroupId</td>
+              <td>int?</td>
+              <td>Asignación basada en grupo (nullable)</td>
+            </tr>
+            <tr>
+              <td>ApplicationModuleId</td>
+              <td>int</td>
+              <td>Módulo objetivo al que se concede acceso</td>
+            </tr>
+            <tr>
+              <td>PermissionValue</td>
+              <td>int</td>
+              <td>Banderas de permisos codificadas por bits</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Se llena UserId o GroupId, nunca ambos. Esto habilita el modelo de permisos de doble ruta donde los usuarios
+          pueden recibir permisos directamente o a través de membresías de grupo.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Entities/Core/ApplicationModuleAccess.cs (1-18)
+        </div>
+
+        <h3>Asignación de Permisos de Doble Ruta</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Asignación de Permisos de Doble Ruta]
+        </div>
+        <p>Al resolver permisos para un usuario, el sistema consulta todos los registros de ApplicationModuleAccess
+          donde:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><code>ApplicationModuleAccess.UserId</code> coincide con el ID del usuario, O</li>
+          <li><code>ApplicationModuleAccess.GroupId</code> coincide con cualquier grupo al que pertenece el usuario</li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Entities/Core/ApplicationModuleAccess.cs (6-17) • SSO.DataModel/Entities/General/User.cs (25-26)
+          • SSO.DataModel/Entities/Core/Group.cs (16-17)
+        </div>
+
+        <h2>Codificación de Valores de Permiso</h2>
+        <p>
+          El campo <code>PermissionValue</code> utiliza codificación por bits para almacenar múltiples permisos en un
+          solo entero. La tabla de referencia <code>Permission</code> define los tipos de permisos estándar:
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Identificador de Permiso</th>
+              <th>Valor de Bits</th>
+              <th>Binario</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>READ</td>
+              <td>1</td>
+              <td>0001</td>
+              <td>Acceso de visualización</td>
+            </tr>
+            <tr>
+              <td>WRITE</td>
+              <td>2</td>
+              <td>0010</td>
+              <td>Acceso de modificación</td>
+            </tr>
+            <tr>
+              <td>ADMIN</td>
+              <td>4</td>
+              <td>0100</td>
+              <td>Acceso administrativo</td>
+            </tr>
+            <tr>
+              <td>MANAGE</td>
+              <td>8</td>
+              <td>1000</td>
+              <td>Acceso de gestión completa</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Operaciones de Bits</h3>
+        <p>Múltiples permisos se combinan usando OR bit a bit:</p>
+        <ul class="list-none pl-6 font-mono text-sm bg-bg-surface p-3 rounded mb-4">
+          <li>READ + WRITE = 1 | 2 = 3 (binario: 0011)</li>
+          <li>READ + ADMIN = 1 | 4 = 5 (binario: 0101)</li>
+          <li>ALL = 1 | 2 | 4 | 8 = 15 (binario: 1111)</li>
+        </ul>
+
+        <p>Las verificaciones de permisos usan AND bit a bit para probar si un permiso específico está presente:</p>
+        <pre><code class="language-csharp">// Verificar si existe el permiso WRITE en permissionValue
+bool hasWrite = (permissionValue & 2) != 0;</code></pre>
+        <p>
+          La lógica de agregación suma todas las entradas de PermissionValue para un usuario a través de sus
+          asignaciones directas y membresías de grupo, luego realiza verificaciones AND bit a bit contra la tabla
+          Permission.Value para determinar qué acciones están permitidas.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (113-122, 164)
+        </div>
+
+        <h2>Lógica de Resolución de Permisos</h2>
+        <p>
+          El método <code>ApplicationService.GetModulesByUsuarioId()</code> implementa el algoritmo central de
+          resolución de permisos con manejo especial para usuarios ROOT.
+        </p>
+
+        <h3>Flujo de Resolución de Permisos</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo de Resolución de Permisos]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (27-96)
+        </div>
+
+        <h3>Omisión de Usuarios ROOT</h3>
+        <p>Los usuarios ROOT (identificados por <code>User.IsRoot == true</code>) omiten todas las verificaciones de
+          permisos:</p>
+        <pre><code class="language-csharp">// Líneas 34-58
+if (user.IsRoot)
+{
+    var menuUserRoot = _mapper.Map&lt;List&lt;ApplicationModuleDto&gt;&gt;(
+        _context.ApplicationsModules
+            .Include(x => x.Submenu.OrderBy(o => o.Order))
+            .Where(x => x.ApplicationId == appId && x.ParentModuleId == null)
+            // Devuelve TODOS los módulos de nivel superior con Submenu completo
+    );
+    return menuUserRoot;
+}</code></pre>
+        <p>
+          Los usuarios ROOT reciben acceso completo a todos los módulos en una aplicación con permisos MANAGE asumidos
+          implícitamente.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (34-58)
+        </div>
+
+        <h3>Resolución de Usuarios Regulares</h3>
+        <p>Para usuarios no-ROOT, la consulta usa filtrado de doble ruta:</p>
+        <pre><code class="language-csharp">// Líneas 61-67
+var groupArray = user.UsersGroups.Select(s => (int?)s.GroupId).ToArray();
+
+var modulesIds = _context.ApplicationsModulesAccesses
+    .Include(x => x.ApplicationModule)
+    .Where(x => (x.UserId == userId || groupArray.Contains(x.GroupId)) 
+           && x.ApplicationModule.ApplicationId == appId 
+           && x.PermissionValue > 0)
+    .Select(s => s.ApplicationModule.ParentModuleId == null 
+                 ? s.ApplicationModuleId 
+                 : s.ApplicationModule.ParentModuleId)
+    .Distinct().ToArray();</code></pre>
+        <p>Esta consulta:</p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>Recopila todos los IDs de grupo a los que pertenece el usuario (groupArray)</li>
+          <li>Encuentra registros de ApplicationModuleAccess donde UserId O GroupId coinciden</li>
+          <li>Filtra por ID de aplicación y valores de permisos positivos</li>
+          <li>Extrae IDs de módulos padre (para elementos de menú de nivel superior) o el ID del módulo mismo si ya es
+            un padre</li>
+          <li>Elimina duplicados con Distinct()</li>
+        </ol>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (61-73)
+        </div>
+
+        <h3>Aplicación de Jerarquía Padre-Hijo</h3>
+        <p>El sistema usa dos arrays de ID separados para aplicar reglas de visibilidad de padres:</p>
+        <ul class="list-disc pl-6 mb-2">
+          <li><code>modulesIds</code>: Módulos de nivel padre que el usuario puede ver</li>
+          <li><code>allowModulesIds</code>: Todos los módulos (incluyendo hijos) a los que el usuario tiene acceso</li>
+        </ul>
+        <pre><code class="language-csharp">// Líneas 75-93
+var modules = _context.ApplicationsModules
+    .Include(x => x.Submenu)           
+    .Where(x => modulesIds.Contains(x.Id))  // Solo módulos padre
+    .ToList();
+
+var modulesV = modules.OrderBy(x => x.Order).Select(x => new ApplicationModule
+{
+    // ... copiar propiedades
+    Submenu = x.Submenu
+        .Where(i => allowModulesIds.Contains(i.Id))  // Filtrar hijos
+        .OrderBy(x => x.Order)
+        .ToList(),
+}).Where(x => x.Submenu.Count > 0 || x.Path != null)  // Eliminar padres vacíos
+  .ToList();</code></pre>
+        <p>
+          Esto previene que aparezcan elementos de submenú huérfanos sin sus contenedores padre, mientras también
+          elimina contenedores padre que no tienen hijos accesibles (a menos que el padre mismo tenga un Path,
+          convirtiéndolo en un módulo clicable).
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (75-95)
+        </div>
+
+        <h2>Métodos de Verificación de Permisos</h2>
+        <p>El ApplicationService proporciona tres métodos para verificar permisos en diferentes granularidades.</p>
+
+        <h3>Comparación de Métodos</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>Entrada</th>
+              <th>Salida</th>
+              <th>Caso de Uso</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GetModulesByUsuarioId</td>
+              <td>userId, appId</td>
+              <td>List&lt;ApplicationModuleDto&gt;</td>
+              <td>Construir menú de navegación</td>
+            </tr>
+            <tr>
+              <td>GetPermissionsByModuleIdAsync</td>
+              <td>userId, moduleId</td>
+              <td>PermissionResponseDto</td>
+              <td>Verificar acciones en módulo específico</td>
+            </tr>
+            <tr>
+              <td>GetPermissionsByAppIdUserIdAsync</td>
+              <td>userId, appId</td>
+              <td>ICollection&lt;PermissionResponseDto&gt;</td>
+              <td>Obtener todos los permisos de módulo para usuario</td>
+            </tr>
+            <tr>
+              <td>GetPermissionsByUserIdAndAppIdAsync</td>
+              <td>userId, appId</td>
+              <td>ICollection&lt;UserModulePermissionsDto&gt;</td>
+              <td>Enumeración detallada de permisos</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (27-224)
+        </div>
+
+        <h3>GetPermissionsByModuleIdAsync</h3>
+        <p>Este método calcula los permisos efectivos para un solo módulo:</p>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: GetPermissionsByModuleIdAsync]
+        </div>
+
+        <p>
+          La lógica de agregación suma PermissionValue a través de múltiples registros de acceso. Si un usuario tiene
+          PermissionValue=1 (READ) de asignación directa y PermissionValue=2 (WRITE) de un grupo, la suma es 3 (READ +
+          WRITE).
+        </p>
+        <pre><code class="language-csharp">// Líneas 105-113
+var permission = await _context.ApplicationsModulesAccesses
+    .Where(x => (x.UserId == usuarioId || gruopArray.Contains(x.GroupId)) 
+           && x.ApplicationModuleId == moduleId)
+    .Select(s => new { s.PermissionValue })
+    .Distinct()
+    .ToListAsync();
+
+var permissionValue = permission.Sum(s => s.PermissionValue);</code></pre>
+        <p>Los usuarios ROOT anulan este cálculo, recibiendo el valor de permiso MANAGE directamente.</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (97-131)
+        </div>
+
+        <h3>Extracción de Permisos por Bits</h3>
+        <p>Después de calcular el permissionValue agregado, el sistema extrae permisos individuales usando AND bit a
+          bit:</p>
+        <pre><code class="language-csharp">// Líneas 122-128
+var MyPermissions = await _context.Permissions
+    .Where(p => (permissionValue & p.Value) != 0)
+    .ToListAsync();
+
+var permissionResponse = new PermissionResponseDto
+{
+    ModuloId = moduleId,
+    Acciones = MyPermissions.Select(x => x.Identifier).ToList(),
+};</code></pre>
+        <p>La consulta <code>(permissionValue & p.Value) != 0</code> verifica si el bit correspondiente a cada tipo de
+          permiso está establecido. Por ejemplo:</p>
+        <ul class="list-none pl-6 font-mono text-sm bg-bg-surface p-3 rounded mb-4">
+          <li>permissionValue = 5 (binario: 0101)</li>
+          <li>Probando READ (1): 5 & 1 = 1 → incluido</li>
+          <li>Probando WRITE (2): 5 & 2 = 0 → excluido</li>
+          <li>Probando ADMIN (4): 5 & 4 = 4 → incluido</li>
+        </ul>
+        <p>El resultado es una lista Acciones que contiene identificadores de permisos como ["READ", "ADMIN"].</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (122-128)
+        </div>
+
+        <h2>Integración con API</h2>
+        <p>El ApplicationController expone la funcionalidad de verificación de permisos a través de endpoints REST.</p>
+
+        <h3>Endpoint GetMenuByUser</h3>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Core/ApplicationController.cs (32-58)
+        </div>
+
+        <h3>Endpoint GetPermissionsByModuleId</h3>
+        <pre><code class="language-http">GET /api/Application/GetPermissionsByModuleId/{moduloId}
+Authorization: Bearer {JWT}</code></pre>
+        <p><strong>Respuesta:</strong></p>
+        <pre><code class="language-json">{
+  "moduloId": 2045,
+  "acciones": ["READ", "WRITE", "ADMIN"]
+}</code></pre>
+        <p>
+          El controlador extrae el ID del usuario de los claims del JWT a través de
+          <code>IAuthService.GetAuthUser()</code>, luego llama a
+          <code>ApplicationService.GetPermissionsByModuleIdAsync()</code> para calcular los permisos efectivos.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Core/ApplicationController.cs (60-86)
+        </div>
+
+        <h2>Mapeo de Código a Concepto</h2>
+
+        <h3>Clases y Métodos Clave</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Entidad de Código</th>
+              <th>Ubicación</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ApplicationModuleAccess</td>
+              <td>SSO.DataModel/Entities/Core/ApplicationModuleAccess.cs</td>
+              <td>Entidad de permiso principal que vincula usuarios/grupos a módulos</td>
+            </tr>
+            <tr>
+              <td>ApplicationService.GetModulesByUsuarioId()</td>
+              <td>SSO.BusinessLayer/Services/Core/ApplicationService.cs (27-96)</td>
+              <td>Resolución principal de permisos para construcción de menú</td>
+            </tr>
+            <tr>
+              <td>ApplicationService.GetPermissionsByModuleIdAsync()</td>
+              <td>SSO.BusinessLayer/Services/Core/ApplicationService.cs (97-131)</td>
+              <td>Cálculo de permisos de módulo único</td>
+            </tr>
+            <tr>
+              <td>User.IsRoot</td>
+              <td>SSO.DataModel/Entities/General/User.cs (15)</td>
+              <td>Bandera de usuario ROOT para omisión de permisos</td>
+            </tr>
+            <tr>
+              <td>User.UsersGroups</td>
+              <td>SSO.DataModel/Entities/General/User.cs (25)</td>
+              <td>Colección de membresías de grupo</td>
+            </tr>
+            <tr>
+              <td>Group.ApplicationsModulesAccesses</td>
+              <td>SSO.DataModel/Entities/Core/Group.cs (17)</td>
+              <td>Asignaciones de permisos a nivel de grupo</td>
+            </tr>
+            <tr>
+              <td>ApplicationController.GetMenuByUser()</td>
+              <td>SSO.Api/Controllers/Core/ApplicationController.cs (32-58)</td>
+              <td>Endpoint API para recuperar menú de usuario</td>
+            </tr>
+            <tr>
+              <td>ApplicationController.GetPermissionsByModuleId()</td>
+              <td>SSO.Api/Controllers/Core/ApplicationController.cs (60-86)</td>
+              <td>Endpoint API para permisos específicos de módulo</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Entities/Core/ApplicationModuleAccess.cs (1-18) •
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (1-226) •
+          SSO.Api/Controllers/Core/ApplicationController.cs (1-148) • SSO.DataModel/Entities/General/User.cs (1-29) •
+          SSO.DataModel/Entities/Core/Group.cs (1-19)
+        </div>
+
+        <h3>Ejemplo de Cálculo de Valor de Permiso</h3>
+        <p>Dado un usuario con:</p>
+        <ul class="list-disc pl-6 mb-2">
+          <li>Asignación directa: ApplicationModuleAccess(UserId=1, ModuleId=100, PermissionValue=1) (READ)</li>
+          <li>Membresía de grupo en Grupo 5, que tiene: ApplicationModuleAccess(GroupId=5, ModuleId=100,
+            PermissionValue=6) (WRITE + ADMIN)</li>
+        </ul>
+        <p><strong>Proceso de resolución:</strong></p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>La consulta devuelve dos registros para el módulo 100</li>
+          <li>Suma: 1 + 6 = 7</li>
+          <li>Representación binaria: 0111</li>
+          <li>Verificaciones bit a bit:
+            <ul class="list-none pl-4 mt-1 font-mono text-sm">
+              <li>READ (1): 7 & 1 = 1 ✓</li>
+              <li>WRITE (2): 7 & 2 = 2 ✓</li>
+              <li>ADMIN (4): 7 & 4 = 4 ✓</li>
+              <li>MANAGE (8): 7 & 8 = 0 ✗</li>
+            </ul>
+          </li>
+          <li>Resultado: ["READ", "WRITE", "ADMIN"]</li>
+        </ol>
+        <p>Esto demuestra cómo los permisos se acumulan a través de asignaciones directas y basadas en grupo.</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (105-128)
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

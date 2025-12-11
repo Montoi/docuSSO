@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Active Directory Integration - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Authentication & Authorization
+      </div>
+
+      <h1>Integración con Active Directory</h1>
+
+      <section class="prose prose-invert max-w-none">
+
+        <h2>Descripción General</h2>
+        <p>
+          El sistema SSO se integra con Active Directory a través de la implementación
+          <code>ActiveDirectoryService</code>. Esta integración soporta dos funciones principales:
+        </p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>Sincronización de Usuarios:</strong> Importación masiva de usuarios de AD a la base de datos local
+            mediante consultas LDAP</li>
+          <li><strong>Gestión de Estado de Usuarios:</strong> Habilitación/deshabilitación automática de cuentas de
+            usuario locales basada en el estado de la cuenta en AD</li>
+        </ul>
+        <p>
+          Los usuarios sincronizados desde AD se marcan con <code>IsExternal = false</code> y
+          <code>Password = null</code> en la base de datos. El flujo de autenticación para estos usuarios se maneja por
+          separado (ver página 3.1).
+        </p>
+        <p>
+          Páginas relacionadas: <a href="authentication-flow.html" class="text-accent hover:underline">Flujo de
+            Autenticación (3.1)</a>, APIs de Gestión de Usuarios (5.1), Servicios de Usuario y Persona (6.1)
+        </p>
+
+        <h2>Arquitectura del Servicio</h2>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama de Componentes: Arquitectura de Integración con AD]
+        </div>
+
+        <h3>Componentes Clave</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Componente</th>
+              <th>Tipo</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>IActiveDirectoryService</td>
+              <td>Interfaz</td>
+              <td>Contrato para operaciones de AD</td>
+            </tr>
+            <tr>
+              <td>ActiveDirectoryService</td>
+              <td>Implementación</td>
+              <td>Ejecución de consultas LDAP</td>
+            </tr>
+            <tr>
+              <td>ADFormatUser</td>
+              <td>DTO</td>
+              <td>Mapea atributos LDAP a propiedades C#</td>
+            </tr>
+            <tr>
+              <td>ActiveDirectorySettings</td>
+              <td>Configuración</td>
+              <td>Parámetros de conexión LDAP</td>
+            </tr>
+            <tr>
+              <td>UserController.SychActiveDirectoryUsers()</td>
+              <td>Endpoint API</td>
+              <td>Dispara la sincronización</td>
+            </tr>
+            <tr>
+              <td>UserService.ImportActiveDirectoryUsers()</td>
+              <td>Lógica de Negocio</td>
+              <td>Inserción masiva de usuarios</td>
+            </tr>
+            <tr>
+              <td>UserService.StatusDirectoryUsers()</td>
+              <td>Lógica de Negocio</td>
+              <td>Habilita/deshabilita usuarios</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Services/Implementations/ActiveDirectoryService.cs (10-125) •
+          SSO.Services/Interfaces/IActiveDirectoryService.cs (1-10) • SSO.Services/Classes/ADFormatUser.cs (1-154) •
+          SSO.Api/Controllers/General/UserController.cs (26-51)
+        </div>
+
+        <h2>Métodos de la Interfaz IActiveDirectoryService</h2>
+        <p>La interfaz IActiveDirectoryService define tres métodos principales:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>Tipo de Retorno</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GetAll()</td>
+              <td>ICollection&lt;ADFormatUser&gt;</td>
+              <td>Recupera todos los usuarios habilitados de AD</td>
+            </tr>
+            <tr>
+              <td>GetDiabledUsers()</td>
+              <td>List&lt;string&gt;</td>
+              <td>Retorna nombres de usuario de cuentas deshabilitadas en AD</td>
+            </tr>
+            <tr>
+              <td>AuthUser(string, string)</td>
+              <td>bool</td>
+              <td>Valida credenciales contra AD (usado en flujo de autenticación)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          El método AuthUser se llama durante la autenticación de inicio de sesión (ver página 3.1). Esta página se
+          enfoca en los métodos de sincronización GetAll() y GetDiabledUsers().
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Services/Interfaces/IActiveDirectoryService.cs (1-10) •
+          SSO.Services/Implementations/ActiveDirectoryService.cs (22-123)
+        </div>
+
+        <h2>Mapeo del DTO ADFormatUser</h2>
+        <p>
+          La clase ADFormatUser mapea atributos LDAP a propiedades C# fuertemente tipadas. El mapeo se realiza en el
+          método GetDirectoryEntry() en
+          <code>SSO.Services/Classes/ADFormatUser.cs</code> 21-150.
+        </p>
+
+        <h3>Mapeos de Atributos LDAP</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Propiedad C#</th>
+              <th>Atributo LDAP</th>
+              <th>Tipo de Datos</th>
+              <th>Referencia de Código</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SamAccountName</td>
+              <td>samaccountname</td>
+              <td>string</td>
+              <td>Línea 35</td>
+            </tr>
+            <tr>
+              <td>EmailAddress</td>
+              <td>mail</td>
+              <td>string</td>
+              <td>Línea 39</td>
+            </tr>
+            <tr>
+              <td>GivenName</td>
+              <td>givenname</td>
+              <td>string</td>
+              <td>Línea 43</td>
+            </tr>
+            <tr>
+              <td>MiddleName</td>
+              <td>sn</td>
+              <td>string</td>
+              <td>Línea 47</td>
+            </tr>
+            <tr>
+              <td>DisplayName</td>
+              <td>displayname</td>
+              <td>string</td>
+              <td>Línea 51</td>
+            </tr>
+            <tr>
+              <td>VoiceTelephoneNumber</td>
+              <td>telephonenumber</td>
+              <td>string</td>
+              <td>Línea 55</td>
+            </tr>
+            <tr>
+              <td>Enabled</td>
+              <td>userAccountControl</td>
+              <td>bool</td>
+              <td>Líneas 67-74</td>
+            </tr>
+            <tr>
+              <td>AccountExpirationDate</td>
+              <td>accountExpires</td>
+              <td>DateTime?</td>
+              <td>Líneas 77-94</td>
+            </tr>
+            <tr>
+              <td>LastLogon</td>
+              <td>lastLogon</td>
+              <td>DateTime?</td>
+              <td>Líneas 97-114</td>
+            </tr>
+            <tr>
+              <td>Sid</td>
+              <td>objectSid</td>
+              <td>string</td>
+              <td>Líneas 125-145</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          La propiedad Enabled decodifica el campo de bits userAccountControl (el valor 2 indica cuenta deshabilitada).
+          Las propiedades AccountExpirationDate y LastLogon convierten enteros de marca de tiempo LDAP a objetos
+          DateTime de .NET.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Services/Classes/ADFormatUser.cs (10-152)
+        </div>
+
+        <h2>Flujo del Proceso de Sincronización</h2>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama de Secuencia: Flujo de Trabajo de Sincronización de Usuarios]
+        </div>
+        <p>La sincronización se ejecuta en tres fases:</p>
+        <ul class="list-none pl-0 space-y-2">
+          <li><strong>Fase de Importación:</strong> <code>UserController.cs</code> (57-89) recupera usuarios de AD y
+            crea entidades User locales para cuentas nuevas</li>
+          <li><strong>Fase de Deshabilitación:</strong> <code>UserService.cs</code> (46-62) establece IsActive = false
+            para cuentas deshabilitadas en AD</li>
+          <li><strong>Fase de Habilitación:</strong> El mismo método reactiva cuentas que están habilitadas en AD pero
+            deshabilitadas localmente</li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/UserController.cs (54-112) • SSO.BusinessLayer/Services/General/UserService.cs
+          (36-62) • SSO.Services/Implementations/ActiveDirectoryService.cs (47-123)
+        </div>
+
+        <h2>Filtros de Consulta LDAP</h2>
+        <p>El ActiveDirectoryService construye objetos DirectorySearcher con cadenas de filtro LDAP específicas.</p>
+
+        <h3>GetAll() - Filtro de Usuarios Habilitados</h3>
+        <p class="text-xs text-text-secondary mb-1">Ubicado en SSO.Services/Implementations/ActiveDirectoryService.cs
+          (54):</p>
+        <pre
+          class="whitespace-pre-wrap word-break-all"><code class="language-ldap">(&(&(mail=*)(sn=*)(givenname=*))(|(&(objectClass=user)(objectCategory=person)(!userAccountControl:1.2.840.113556.1.4.803:=2))(useraccountcontrol=515)(useraccountcontrol=66048)))</code></pre>
+        <p>Desglose del Filtro:</p>
+        <ul class="list-none pl-0 space-y-1 text-sm font-mono text-text-secondary bg-bg-surface p-2 rounded">
+          <li>(&(mail=*)(sn=*)(givenname=*)) - Requiere email, apellido y nombre de pila</li>
+          <li>(objectClass=user)(objectCategory=person) - Filtra cuentas de usuario</li>
+          <li>(!userAccountControl:1.2.840.113556.1.4.803:=2) - Excluye cuentas con bit 2 establecido (deshabilitadas)
+          </li>
+          <li>(useraccountcontrol=515) - Cuenta normal (habilitada)</li>
+          <li>(useraccountcontrol=66048) - Cuenta con contraseña que nunca expira</li>
+        </ul>
+        <p>Propiedades Recuperadas: samaccountname, mail, givenname, sn, displayname, telephonenumber, accountExpires,
+          lastLogon, objectSid, userAccountControl</p>
+
+        <h3>GetDiabledUsers() - Filtro de Usuarios Deshabilitados</h3>
+        <p class="text-xs text-text-secondary mb-1">Ubicado en SSO.Services/Implementations/ActiveDirectoryService.cs
+          (101):</p>
+        <pre
+          class="whitespace-pre-wrap word-break-all"><code class="language-ldap">(&(objectClass=user)(objectCategory=person)(userAccountControl:1.2.840.113556.1.4.803:=2))</code></pre>
+        <p>Desglose del Filtro:</p>
+        <ul class="list-none pl-0 space-y-1 text-sm font-mono text-text-secondary bg-bg-surface p-2 rounded">
+          <li>(objectClass=user)(objectCategory=person) - Filtra cuentas de usuario</li>
+          <li>(userAccountControl:1.2.840.113556.1.4.803:=2) - Coincide con cuentas que tienen el bit 2 establecido
+            (deshabilitadas)</li>
+        </ul>
+        <p>Propiedades Recuperadas: samaccountname solamente</p>
+
+        <h3>AuthUser() - Filtro de Autenticación</h3>
+        <p class="text-xs text-text-secondary mb-1">Ubicado en SSO.Services/Implementations/ActiveDirectoryService.cs
+          (29):</p>
+        <pre
+          class="whitespace-pre-wrap word-break-all"><code class="language-ldap">(&(samaccountname={username}))</code></pre>
+        <p>Localiza un usuario específico por nombre de inicio de sesión de Windows para validación de credenciales
+          usando entry.Invoke("PasswordLastChanged").</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Services/Implementations/ActiveDirectoryService.cs (22-123)
+        </div>
+
+        <h2>Mapeo de Creación de Entidades</h2>
+
+        <h3>Construcción de Entidades User y Person</h3>
+        <p>Al crear usuarios desde AD, el endpoint SychActiveDirectoryUsers instancia entidades User y Person anidadas
+          en <code>SSO.Api/Controllers/General/UserController.cs</code> 70-85:</p>
+        <pre><code class="language-csharp">userList.Add(new User
+{
+    Username = adUser.SamAccountName,
+    Password = null,
+    IsExternal = false,
+    IsLocked = false,
+    ResetPassword = false,
+    Person = new Person
+    {
+        FirstName = adUser.GivenName,
+        LastName = adUser.MiddleName,
+        Email = adUser.EmailAddress,
+        Telephone = adUser.VoiceTelephoneNumber,
+        InstitutionId = 1
+    }
+});</code></pre>
+
+        <h3>Tabla de Mapeo de Propiedades de Entidades</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Entity.Property</th>
+              <th>Origen</th>
+              <th>Notas</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>User.Username</td>
+              <td>ADFormatUser.SamAccountName</td>
+              <td>Nombre de inicio de sesión de Windows</td>
+            </tr>
+            <tr>
+              <td>User.Password</td>
+              <td>null</td>
+              <td>No se almacena contraseña local</td>
+            </tr>
+            <tr>
+              <td>User.IsExternal</td>
+              <td>false</td>
+              <td>Marca usuarios sincronizados desde AD</td>
+            </tr>
+            <tr>
+              <td>User.IsLocked</td>
+              <td>false</td>
+              <td>Estado desbloqueado por defecto</td>
+            </tr>
+            <tr>
+              <td>User.ResetPassword</td>
+              <td>false</td>
+              <td>No se requiere reinicio de contraseña</td>
+            </tr>
+            <tr>
+              <td>Person.FirstName</td>
+              <td>ADFormatUser.GivenName</td>
+              <td>LDAP givenname</td>
+            </tr>
+            <tr>
+              <td>Person.LastName</td>
+              <td>ADFormatUser.MiddleName</td>
+              <td>LDAP sn (apellido)</td>
+            </tr>
+            <tr>
+              <td>Person.Email</td>
+              <td>ADFormatUser.EmailAddress</td>
+              <td>LDAP mail</td>
+            </tr>
+            <tr>
+              <td>Person.Telephone</td>
+              <td>ADFormatUser.VoiceTelephoneNumber</td>
+              <td>LDAP telephonenumber</td>
+            </tr>
+            <tr>
+              <td>Person.InstitutionId</td>
+              <td>1</td>
+              <td>Institución predeterminada codificada</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Semántica del Flag IsExternal</h3>
+        <p>
+          Los usuarios sincronizados desde AD se marcan con IsExternal = false. Este nombre contraintuitivo indica que
+          estos usuarios se autentican mediante LDAP de AD externo, no con contraseñas BCrypt locales. El campo Password
+          = null refuerza que no se almacena ninguna credencial local.
+        </p>
+        <p>
+          El método StatusDirectoryUsers() en <code>SSO.BusinessLayer/Services/General/UserService.cs</code> 46-62
+          consulta usuarios donde IsExternal == false para actualizar su estado IsActive basado en el estado de la
+          cuenta en AD.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/UserController.cs (66-87) • SSO.BusinessLayer/Services/General/UserService.cs
+          (46-62)
+        </div>
+
+        <h2>Configuración de ActiveDirectorySettings</h2>
+        <p>El constructor de ActiveDirectoryService recibe IOptions&lt;ActiveDirectorySettings&gt; en
+          <code>SSO.Services/Implementations/ActiveDirectoryService.cs</code> 15-19:</p>
+        <pre><code class="language-csharp">public ActiveDirectoryService(IOptions&lt;ActiveDirectorySettings&gt; options)
+{
+    _activeDirectorySettings = options.Value;
+}</code></pre>
+
+        <h3>Propiedades de Configuración Requeridas</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Propiedad</th>
+              <th>Tipo</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>PrincipalHost</td>
+              <td>string</td>
+              <td>Cadena de conexión LDAP (ej., LDAP://dc.domain.com)</td>
+            </tr>
+            <tr>
+              <td>Username</td>
+              <td>string</td>
+              <td>Nombre de usuario de cuenta de servicio para enlace LDAP</td>
+            </tr>
+            <tr>
+              <td>Password</td>
+              <td>string</td>
+              <td>Contraseña de cuenta de servicio para enlace LDAP</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Estas configuraciones se leen desde appsettings.json e inyectan mediante el patrón Options. La cuenta de
+          servicio debe tener permisos de lectura en el dominio de AD para ejecutar consultas LDAP.
+        </p>
+        <p>
+          Los objetos DirectoryEntry se construyen usando estas credenciales en las líneas 26-27, 52-53 y 99-100 de
+          <code>ActiveDirectoryService.cs</code>.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Services/Implementations/ActiveDirectoryService.cs (10-125) •
+          SSO.BusinessLayer/Settings/ActiveDirectorySettings.cs (1-10)
+        </div>
+
+        <h2>Manejo de Errores</h2>
+
+        <h3>Manejo de Excepciones en ActiveDirectoryService</h3>
+        <p>Los métodos de ActiveDirectoryService usan bloques try-catch que suprimen excepciones:</p>
+        <ul class="list-none pl-0 space-y-4">
+          <li>
+            <strong>Método AuthUser()</strong> (40-43):
+            <pre class="mt-1"><code class="language-csharp">catch (Exception)
+{
+    return false;
+}</code></pre>
+            Retorna false para cualquier fallo de conexión LDAP o credenciales inválidas.
+          </li>
+          <li>
+            <strong>Método GetAll()</strong> (87-90):
+            <pre class="mt-1"><code class="language-csharp">catch (Exception)
+{
+    return null;
+}</code></pre>
+            Retorna null para fallos de consulta LDAP.
+          </li>
+          <li>
+            <strong>Método GetDiabledUsers()</strong> (119-122):
+            <pre class="mt-1"><code class="language-csharp">catch (Exception)
+{
+    return null;
+}</code></pre>
+            Retorna null para fallos de consulta LDAP.
+          </li>
+        </ul>
+
+        <h3>Manejo de Excepciones en UserController</h3>
+        <p>El endpoint SychActiveDirectoryUsers en <code>SSO.Api/Controllers/General/UserController.cs</code> 61-111
+          envuelve todo el proceso de sincronización en bloques try-catch:</p>
+        <pre><code class="language-csharp">catch (ArgumentNullException ex)
+{
+    return Ok(new OperationResult
+    {
+        Success = false,
+        Message = $"Error: [Mensaje: { ex.Message }]",
+        StatusCode = HttpStatusCode.InternalServerError
+    });
+}
+catch (Exception ex)
+{
+    return Ok(new OperationResult
+    {
+        Success = false,
+        Message = $"Error: [Mensaje: { ex.Message }] [InnerException: { ex.InnerException } ]",
+        StatusCode = HttpStatusCode.InternalServerError
+    });
+}</code></pre>
+        <p>
+          Los detalles de las excepciones se registran pero no se exponen a los clientes más allá del campo
+          OperationResult.Message. Los fallos de conexión LDAP retornan respuestas de error estructuradas en lugar de
+          lanzar excepciones no manejadas.
+        </p>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

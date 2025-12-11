@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Architecture - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Overview</div>
+
+      <h1>Arquitectura del Sistema</h1>
+
+      <section class="prose prose-invert max-w-none">
+        <p>
+          Este documento proporciona una descripción general completa de la arquitectura del sistema SSO, incluyendo su
+          estructura en capas, modelo de dominio principal, implementación del patrón repositorio y configuración de
+          inyección de dependencias. El sistema SSO está construido como una aplicación <strong>ASP.NET Core
+            5.0</strong> de múltiples niveles que proporciona capacidades de Single Sign-On con gestión de permisos de
+          grano fino a través de múltiples aplicaciones.
+        </p>
+        <p>
+          Para detalles de implementación de autenticación y autorización, ver <a href="#"
+            class="text-accent hover:underline">Autenticación y Autorización</a>. Para especificaciones de endpoints de
+          API, ver <a href="#" class="text-accent hover:underline">Controladores API</a>. Para detalles del esquema de
+          base de datos, ver <a href="#" class="text-accent hover:underline">Esquema de Base de Datos Principal</a>.
+        </p>
+
+        <h2>Descripción General de la Arquitectura en Capas</h2>
+        <p>
+          El sistema SSO sigue una arquitectura de n niveles estricta con clara separación de responsabilidades a través
+          de cuatro capas distintas. Cada capa tiene responsabilidades bien definidas y las dependencias fluyen
+          unidireccionalmente de arriba hacia abajo.
+        </p>
+
+        <!-- Diagram Placeholder -->
+        <div
+          class="my-8 p-8 border border-border-dark border-dashed rounded-lg bg-bg-surface flex flex-col items-center justify-center text-text-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+          <span class="text-sm">Estructura de Capas (Diagrama)</span>
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/SSO.Api.csproj (1-46) • SSO.Api/Startup.cs (1-97) • SSO.Api/StartupExtension.cs (1-248)
+        </div>
+
+        <h3>Dependencias de Proyectos</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Proyecto</th>
+              <th>Descripción</th>
+              <th>Dependencias Clave</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>SSO.Api</strong></td>
+              <td>Capa API REST con controladores y middleware</td>
+              <td>SSO.BusinessLayer, SSO.DataModel, SSO.Services, SSO.Core</td>
+            </tr>
+            <tr>
+              <td><strong>SSO.BusinessLayer</strong></td>
+              <td>Lógica de negocio, servicios, DTOs, validadores</td>
+              <td>SSO.DataModel, SSO.Core, AutoMapper, FluentValidation</td>
+            </tr>
+            <tr>
+              <td><strong>SSO.DataModel</strong></td>
+              <td>Capa de acceso a datos con repositorios y entidades</td>
+              <td>SSO.Core, Entity Framework Core 5.0.9</td>
+            </tr>
+            <tr>
+              <td><strong>SSO.Services</strong></td>
+              <td>Integraciones de servicios externos</td>
+              <td>System.DirectoryServices (AD), MailKit</td>
+            </tr>
+            <tr>
+              <td><strong>SSO.Core</strong></td>
+              <td>Clases base e interfaces compartidas</td>
+              <td>Sin dependencias</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/SSO.Api.csproj (1-46)
+        </div>
+
+        <h2>Modelo de Dominio Principal</h2>
+        <p>
+          El modelo de dominio se centra en tres agregados primarios: <code>Application</code>, <code>User</code> y
+          <code>ApplicationModule</code>. Estas entidades soportan SSO multi-tenant con estructuras de permisos
+          jerárquicas.
+        </p>
+
+        <!-- Diagram Placeholder -->
+        <div
+          class="my-8 p-8 border border-border-dark border-dashed rounded-lg bg-bg-surface flex flex-col items-center justify-center text-text-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span class="text-sm">Diagrama de Relaciones de Entidades</span>
+        </div>
+
+        <h3>Características Clave de Entidades</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Entidad</th>
+              <th>Ruta del Archivo</th>
+              <th>Propiedades Clave</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Application</td>
+              <td><span class="text-xs text-text-secondary">SSO.DataModel/Entities/Core/Application.cs</span></td>
+              <td>Name, Secret, CallbackUrl, PasswordClient</td>
+              <td>Aplicaciones cliente registradas en SSO</td>
+            </tr>
+            <tr>
+              <td>ApplicationModule</td>
+              <td><span class="text-xs text-text-secondary">SSO.DataModel/Entities/Core/ApplicationModule.cs</span></td>
+              <td>ApplicationId, ParentModuleId, Title, Path, Order</td>
+              <td>Estructura de menú jerárquica</td>
+            </tr>
+            <tr>
+              <td>User</td>
+              <td><span class="text-xs text-text-secondary">SSO.DataModel/Entities/General/User.cs</span></td>
+              <td>Username, Password, IsRoot, IsExternal, IsLocked</td>
+              <td>Credenciales de autenticación y banderas</td>
+            </tr>
+            <tr>
+              <td>ApplicationModuleAccess</td>
+              <td><span
+                  class="text-xs text-text-secondary">SSO.DataModel/Entities/Core/ApplicationModuleAccess.cs</span></td>
+              <td>UserId, GroupId, PermissionValue</td>
+              <td>Asignaciones de permisos (basadas en usuario o grupo)</td>
+            </tr>
+            <tr>
+              <td>UserAccessControl</td>
+              <td><span class="text-xs text-text-secondary">SSO.DataModel/Entities/Core/UserAccessControl.cs</span></td>
+              <td>UniqueId (Guid), UserId, ExpireAt</td>
+              <td>Tokens de sesión con expiración</td>
+            </tr>
+            <tr>
+              <td>Group</td>
+              <td><span class="text-xs text-text-secondary">SSO.DataModel/Entities/Core/Group.cs</span></td>
+              <td>ApplicationId, Name, Description</td>
+              <td>Grupos de control de acceso basado en roles</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          Application.cs (1-22) • ApplicationModule.cs (1-29) • User.cs (1-30) • ApplicationModuleAccess.cs (1-19) •
+          UserAccessControl.cs (1-18) • Group.cs (1-19)
+        </div>
+
+        <h3>Arquitectura del Modelo de Permisos</h3>
+        <p>El sistema implementa una estrategia de resolución de permisos de doble ruta donde los permisos pueden
+          asignarse directamente a usuarios o a grupos:</p>
+        <ul>
+          <li><strong>Permisos Directos de Usuario:</strong> <code>ApplicationModuleAccess.UserId</code> está poblado,
+            <code>GroupId</code> es null</li>
+          <li><strong>Permisos Basados en Grupo:</strong> <code>ApplicationModuleAccess.GroupId</code> está poblado,
+            <code>UserId</code> es null</li>
+          <li><strong>Codificación de Valor de Permiso:</strong> Entero bitwise (Read=1, Write=2, Admin=4, Manage=8)
+          </li>
+          <li><strong>Bypass de Usuario ROOT:</strong> Usuarios con <code>User.IsRoot=true</code> reciben todos los
+            módulos con permisos máximos</li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Entities/Core/ApplicationModuleAccess.cs (1-19) • SSO.DataModel/Entities/General/User.cs (1-30)
+        </div>
+
+        <h2>Implementación del Patrón Repositorio</h2>
+        <p>
+          La capa de acceso a datos implementa el patrón Repositorio con dos niveles distintos de abstracción:
+          <code>BaseRepository&lt;T&gt;</code> con todas las funcionalidades para entidades complejas y
+          <code>FileBaseRepository&lt;T&gt;</code> ligero para metadatos de archivos.
+        </p>
+
+        <h3>Características Clave de BaseRepository</h3>
+        <p>Ubicación: <code>SSO.BusinessLayer/Repositories/Base/BaseRepository.cs</code></p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Característica</th>
+              <th>Métodos</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Operaciones CRUD</td>
+              <td>Add(), Update(), Remove(), DeleteByIdAsync()</td>
+              <td>Gestión completa del ciclo de vida con validación</td>
+            </tr>
+            <tr>
+              <td>Composición de Consultas</td>
+              <td>PrepareQuery(), FindBy(), GetQueryable()</td>
+              <td>Construir consultas complejas con includes, predicados, ordenamiento</td>
+            </tr>
+            <tr>
+              <td>Paginación</td>
+              <td>GetPagedAsync(), GetPaged()</td>
+              <td>Retorna DataCollection&lt;T&gt; con conteo total y metadatos de página</td>
+            </tr>
+            <tr>
+              <td>Agregaciones</td>
+              <td>CountAsync(), SumAsync()</td>
+              <td>Consultas computadas con predicados opcionales</td>
+            </tr>
+            <tr>
+              <td>Carga Eager</td>
+              <td>Find(), FirstOrDefaultAsync()</td>
+              <td>Incluir propiedades de navegación con arrays de expresiones params</td>
+            </tr>
+            <tr>
+              <td>Borrado Lógico</td>
+              <td>Remove(), DeleteByIdAsync()</td>
+              <td>Establece IsDeleted=true en lugar de eliminar registros</td>
+            </tr>
+            <tr>
+              <td>Validación</td>
+              <td>Add(), Update()</td>
+              <td>Integración FluentValidation, retorna OperationResult</td>
+            </tr>
+            <tr>
+              <td>Actualizaciones Anidadas</td>
+              <td>ModifyInnerEntities()</td>
+              <td>Maneja automáticamente grafos de entidades detectando entidades hijas</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (1-506) •
+          SSO.BusinessLayer/Interfaces/Base/IEntityBaseRepository.cs (1-103)
+        </div>
+
+        <h3>Patrón Simplificado de FileBaseRepository</h3>
+        <p>El <code>FileBaseRepository&lt;T&gt;</code> proporciona una interfaz mínima para entidades de metadatos de
+          archivos que no requieren consultas complejas o validación.</p>
+
+        <pre><code class="language-csharp">public interface IFileBaseRepository&lt;T&gt;
+{
+    Task&lt;T&gt; Create(T entity);
+    Task&lt;T&gt; FindAsync(Expression&lt;Func&lt;T, bool&gt;&gt; condition, params Expression&lt;Func&lt;T, object&gt;&gt;[] includes);
+    Task SaveAsync();
+}</code></pre>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/FileBaseRepository.cs (1-46) •
+          SSO.BusinessLayer/Interfaces/Base/IFileBaseRepository.cs (1-20)
+        </div>
+
+        <h2>Configuración de Inyección de Dependencias</h2>
+        <p>
+          La aplicación utiliza el contenedor de inyección de dependencias integrado de ASP.NET Core configurado a
+          través de métodos de extensión en <code>StartupExtension.cs</code>. Todos los servicios, repositorios y
+          componentes de infraestructura están registrados como dependencias transitorias.
+        </p>
+
+        <h3>Categorías de Registro de Servicios</h3>
+        <p>Ubicación: <code>SSO.Api/StartupExtension.cs</code></p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Servicios Registrados</th>
+              <th>Tiempo de Vida</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Autenticación</td>
+              <td>IAuthService, IUserAccessControlService</td>
+              <td>Transient</td>
+            </tr>
+            <tr>
+              <td>Gestión de Usuarios</td>
+              <td>IUserService, IPersonService, IEmployeeService</td>
+              <td>Transient</td>
+            </tr>
+            <tr>
+              <td>Gestión de Aplicaciones</td>
+              <td>IApplicationService, IApplicationModuleService...</td>
+              <td>Transient</td>
+            </tr>
+            <tr>
+              <td>Control de Acceso</td>
+              <td>IGroupService, IPermissionService, IUserGroupService</td>
+              <td>Transient</td>
+            </tr>
+            <tr>
+              <td>Solicitudes de Acceso</td>
+              <td>IApplicationAccessRequestService, IUserRequestService</td>
+              <td>Transient</td>
+            </tr>
+            <tr>
+              <td>Gestión de Archivos</td>
+              <td>IFileService, FileDirectoryService</td>
+              <td>Transient</td>
+            </tr>
+            <tr>
+              <td>Repositorios</td>
+              <td>IFileRepository, IFileTypeRepository</td>
+              <td>Transient</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/StartupExtension.cs (49-92)
+        </div>
+
+        <h3>Vinculación de Configuración con Patrón IOptions</h3>
+        <pre><code class="language-csharp">services.Configure&lt;MailSettings&gt;(configuration.GetSection(nameof(MailSettings)));
+services.Configure&lt;ActiveDirectorySettings&gt;(configuration.GetSection(nameof(ActiveDirectorySettings)));
+services.Configure&lt;FileSettings&gt;(configuration.GetSection(nameof(FileSettings)));
+services.Configure&lt;SystemSettings&gt;(configuration.GetSection(nameof(SystemSettings)));</code></pre>
+        <p>
+          Estos objetos de configuración se inyectan en los servicios como <code>IOptions&lt;MailSettings&gt;</code>
+          habilitando acceso type-safe.
+        </p>
+
+        <h2>Pipeline de Middleware</h2>
+        <p>El pipeline de solicitudes HTTP está configurado en el método <code>Configure()</code> y procesa las
+          solicitudes en el siguiente orden:</p>
+        <!-- Diagram Placeholder -->
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama de Flujo del Pipeline de Middleware]
+        </div>
+
+        <h3>Configuración de Middleware de Autenticación</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Parámetro</th>
+              <th>Valor</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>DefaultAuthenticateScheme</td>
+              <td>JwtBearerDefaults.AuthenticationScheme</td>
+              <td>Usar JWT para autenticación</td>
+            </tr>
+            <tr>
+              <td>ValidateIssuer</td>
+              <td>false</td>
+              <td>Omitir validación de emisor</td>
+            </tr>
+            <tr>
+              <td>ValidateAudience</td>
+              <td>false</td>
+              <td>Omitir validación de audiencia</td>
+            </tr>
+            <tr>
+              <td>ValidateLifetime</td>
+              <td>true</td>
+              <td>Forzar expiración de token</td>
+            </tr>
+            <tr>
+              <td>ValidateIssuerSigningKey</td>
+              <td>true</td>
+              <td>Verificar firma con clave secreta</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Arquitectura del Contexto de Base de Datos</h2>
+        <p>
+          La clase <code>MainDbContext</code> sirve como el contexto central de Entity Framework Core, gestionando
+          configuraciones de entidades, seguimiento de cambios y automatización de campos de auditoría.
+        </p>
+        <p>
+          El <code>MainDbContext</code> sobrescribe <code>SaveChanges()</code> para poblar automáticamente campos de
+          auditoría (CreatedBy, RegistrationDate, etc.) en todas las entidades que implementan <code>IEntityBase</code>.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/StartupExtension.cs (40-47) • SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (119-147)
+        </div>
+
+        <h2>Configuración de AutoMapper</h2>
+        <pre><code class="language-csharp">var config = new MapperConfiguration(cfg =>
+{
+    var mainAssembly = AppDomain.CurrentDomain.GetAssemblies()
+        .FirstOrDefault(c => c.GetName().Name == "SSO.BusinessLayer");
+    cfg.AddMaps(mainAssembly);
+    cfg.AllowNullCollections = true;
+});</code></pre>
+
+        <h2>Integración del Framework de Validación</h2>
+        <p>FluentValidation está integrado en dos niveles:</p>
+        <ul>
+          <li><strong>Registro de Validadores:</strong> Cada entidad tiene un validador registrado con el pipeline de
+            MVC.</li>
+          <li><strong>Inyección en Repositorios:</strong> Los validadores se inyectan en
+            <code>BaseRepository&lt;T&gt;</code> para validar antes de persistir.</li>
+        </ul>
+
+        <pre><code class="language-csharp">public BaseRepository(DbContext context, IValidator&lt;TModel&gt; validator, IMapper mapper)
+{
+    _context = context;
+    _dbSet = context.Set&lt;TModel&gt;();
+    _validator = validator;
+}</code></pre>
+
+        <h2>Configuración de Swagger/OpenAPI</h2>
+        <p>
+          Swagger está configurado para proporcionar documentación interactiva de API con soporte de autenticación JWT
+          Bearer. La UI de Swagger incluye una definición de seguridad que permite a los usuarios ingresar tokens JWT en
+          el formato <code>Bearer {token}</code>.
+        </p>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

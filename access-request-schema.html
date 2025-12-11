@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Access Request Management Schema - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Database</div>
+
+      <h1>Esquema de Gestión de Solicitudes de Acceso</h1>
+
+      <section class="prose prose-invert max-w-none">
+
+        <h2>Propósito y Alcance</h2>
+        <p>
+          Este documento detalla las entidades <code>ApplicationAccessRequest</code> y <code>UserRequest</code> que
+          gestionan el flujo de trabajo de aprovisionamiento de usuarios en el sistema SSO. Estas entidades rastrean
+          solicitudes a través de múltiples estados de flujo de trabajo—desde la presentación inicial, pasando por la
+          revisión administrativa, hasta la aprobación o rechazo final—automatizando la creación de registros
+          <code>Person</code>, <code>User</code> y <code>ApplicationModuleAccess</code>.
+        </p>
+        <p>
+          El esquema de solicitudes de acceso implementa una máquina de estados para dos rutas de aprovisionamiento
+          distintas: registro de nuevos usuarios mediante <code>UserRequest</code> y solicitudes de acceso a
+          aplicaciones mediante <code>ApplicationAccessRequest</code>. Ambas entidades utilizan la entidad
+          <code>Status</code> para rastrear la progresión del flujo de trabajo y mantener pistas de auditoría mediante
+          referencias <code>UserProccesatorId</code>.
+        </p>
+        <p>
+          Para información sobre las entidades creadas por solicitudes aprobadas, consulte <a
+            href="./core-entities-relationships.html" class="text-accent hover:underline">Entidades y Relaciones
+            Principales</a>. Para la capa de servicios que procesa estas solicitudes, consulte <a href="#"
+            class="text-accent hover:underline">Servicios de Solicitudes de Acceso</a>. Para los endpoints de la API que
+          exponen la gestión de solicitudes, consulte <a href="#" class="text-accent hover:underline">APIs de
+            Solicitudes de Acceso</a>.
+        </p>
+
+        <h2>Entidades de Solicitud Principales</h2>
+        <p>El esquema de solicitudes de acceso se centra en dos entidades almacenadas en el esquema Core que implementan
+          flujos de trabajo de aprovisionamiento distintos.</p>
+
+        <h3>Entidad UserRequest</h3>
+        <p>
+          La entidad <code>UserRequest</code> (tabla: <code>UserRequest</code> en el esquema Core) captura datos
+          demográficos e institucionales para solicitudes de registro de nuevos usuarios. Tras la aprobación, la entidad
+          desencadena la creación automática de registros <code>Person</code> y <code>User</code>.
+        </p>
+
+        <h4>Definición del Esquema - Tabla UserRequest</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Columna</th>
+              <th>Tipo</th>
+              <th>Propósito</th>
+              <th>Restricciones</th>
+              <th>Valor por defecto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>UserRequestId</td>
+              <td>int</td>
+              <td>Clave primaria</td>
+              <td>Identity, PK</td>
+              <td>Auto-incremento</td>
+            </tr>
+            <tr>
+              <td>Document</td>
+              <td>nvarchar(50)</td>
+              <td>Número de documento de identificación</td>
+              <td>Requerido</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>FirstName</td>
+              <td>nvarchar(max)</td>
+              <td>Nombre</td>
+              <td>Requerido</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>LastName</td>
+              <td>nvarchar(max)</td>
+              <td>Apellido</td>
+              <td>Requerido</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>Email</td>
+              <td>nvarchar(100)</td>
+              <td>Dirección de correo electrónico</td>
+              <td>Requerido</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>UserName</td>
+              <td>nvarchar(50)</td>
+              <td>Nombre de usuario del sistema propuesto</td>
+              <td>Requerido</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>Telephone</td>
+              <td>nvarchar(15)</td>
+              <td>Teléfono de contacto</td>
+              <td>Opcional</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>Extension</td>
+              <td>nvarchar(10)</td>
+              <td>Extensión telefónica</td>
+              <td>Opcional</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>Cellphone</td>
+              <td>nvarchar(15)</td>
+              <td>Número de móvil</td>
+              <td>Opcional</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>Observacion</td>
+              <td>nvarchar(max)</td>
+              <td>Notas de la solicitud</td>
+              <td>Requerido</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>InstitutionId</td>
+              <td>int</td>
+              <td>Clave foránea a Institution</td>
+              <td>Opcional</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>DocumentTypeId</td>
+              <td>int</td>
+              <td>Clave foránea a DocumentType</td>
+              <td>Requerido</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>GenderId</td>
+              <td>int</td>
+              <td>Clave foránea a Gender</td>
+              <td>Requerido</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>StatusId</td>
+              <td>int</td>
+              <td>Clave foránea a Status</td>
+              <td>Requerido</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>UserProccesatorId</td>
+              <td>int</td>
+              <td>Clave foránea a User (procesador)</td>
+              <td>Opcional</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>RegistrationDate</td>
+              <td>datetimeoffset</td>
+              <td>Marca de tiempo de creación</td>
+              <td>Auditoría</td>
+              <td>Auto</td>
+            </tr>
+            <tr>
+              <td>ModificationDate</td>
+              <td>datetimeoffset</td>
+              <td>Marca de tiempo de última actualización</td>
+              <td>Auditoría</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>CreatedBy</td>
+              <td>int</td>
+              <td>ID del usuario creador</td>
+              <td>Auditoría</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>UpdateBy</td>
+              <td>int</td>
+              <td>ID del último usuario actualizador</td>
+              <td>Auditoría</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>IsActive</td>
+              <td>bit</td>
+              <td>Bandera de activo</td>
+              <td>Auditoría</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>IsDeleted</td>
+              <td>bit</td>
+              <td>Bandera de eliminación suave</td>
+              <td>Auditoría</td>
+              <td>-</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>La definición de la entidad incluye propiedades de navegación a Institution, DocumentType, Status, Gender,
+          UserProccesator (User), y colecciones para People y ApplicationAccessRequest.</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Migrations/20250819140708_Init-Create.cs (580-638) • SSO.DataModel/Entities/Core/UserRequest.cs (8-37)
+        </div>
+
+        <h3>Entidad ApplicationAccessRequest</h3>
+        <p>
+          La entidad <code>ApplicationAccessRequest</code> (tabla: <code>ApplicationAccessRequest</code> en el esquema
+          Core) gestiona el aprovisionamiento de acceso para aplicaciones. Puede ser creada de forma independiente para
+          usuarios existentes o generada automáticamente desde un <code>UserRequest</code> aprobado.
+        </p>
+
+        <h4>Definición del Esquema - Tabla ApplicationAccessRequest</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Columna</th>
+              <th>Tipo</th>
+              <th>Propósito</th>
+              <th>Restricciones</th>
+              <th>Valor por defecto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ApplicationAccessRequestId</td>
+              <td>int</td>
+              <td>Clave primaria</td>
+              <td>Identity, PK</td>
+              <td>Auto-incremento</td>
+            </tr>
+            <tr>
+              <td>ApplicationId</td>
+              <td>int</td>
+              <td>FK a Application</td>
+              <td>Requerido</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>UserId</td>
+              <td>int</td>
+              <td>FK a User (solicitante)</td>
+              <td>Opcional, Único</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>UserRequestId</td>
+              <td>int</td>
+              <td>FK a UserRequest</td>
+              <td>Opcional, Único</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>UserProccesatorId</td>
+              <td>int</td>
+              <td>FK a User (procesador)</td>
+              <td>Opcional</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>StatusId</td>
+              <td>int</td>
+              <td>FK a Status</td>
+              <td>Requerido</td>
+              <td>1 (EnEspera)</td>
+            </tr>
+            <tr>
+              <td>Observacion</td>
+              <td>nvarchar(max)</td>
+              <td>Notas de la solicitud</td>
+              <td>Requerido</td>
+              <td>"Solicitud creación..."</td>
+            </tr>
+            <tr>
+              <td>UserId1</td>
+              <td>int</td>
+              <td>Propiedad sombra para EF</td>
+              <td>Opcional, Único</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>RegistrationDate</td>
+              <td>datetimeoffset</td>
+              <td>Marca de tiempo de creación</td>
+              <td>Auditoría</td>
+              <td>Auto</td>
+            </tr>
+            <tr>
+              <td>ModificationDate</td>
+              <td>datetimeoffset</td>
+              <td>Última actualización</td>
+              <td>Auditoría</td>
+              <td>NULL</td>
+            </tr>
+            <tr>
+              <td>CreatedBy</td>
+              <td>int</td>
+              <td>Creado por</td>
+              <td>Auditoría</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>UpdateBy</td>
+              <td>int</td>
+              <td>Actualizado por</td>
+              <td>Auditoría</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>IsActive</td>
+              <td>bit</td>
+              <td>Bandera de activo</td>
+              <td>Auditoría</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>IsDeleted</td>
+              <td>bit</td>
+              <td>Bandera de eliminación suave</td>
+              <td>Auditoría</td>
+              <td>-</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="text-sm mt-2">
+          El <code>StatusId</code> por defecto es 1 (En Espera). El campo Observacion tiene un valor por defecto para
+          estandarizar. La entidad soporta tres referencias de usuario distintas: solicitante (UserId), procesador
+          (UserProccesatorId), y solicitud asociada (UserRequestId).
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          Migrations (349-386) • ApplicationAccessRequest.cs (11-27) • ApplicationAccessRequestConfiguration.cs (14-48)
+        </div>
+
+        <h2>Flujo de Trabajo de Estados de Solicitud</h2>
+        <p>
+          Ambas entidades utilizan la tabla <code>Status</code> (esquema Core) para rastrear la progresión. Los
+          registros de estado tienen la columna <code>EntityType</code> para delimitar su uso.
+        </p>
+
+        <h3>Datos de Referencia de Estado</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>StatusId</th>
+              <th>Name</th>
+              <th>EntityType</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>En Espera</td>
+              <td>ApplicationAccessRequest</td>
+              <td>Estado inicial para solicitudes de acceso</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Pendiente</td>
+              <td>ApplicationAccessRequest|UserRequest</td>
+              <td>En espera de revisión</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>En Proceso</td>
+              <td>ApplicationAccessRequest|UserRequest</td>
+              <td>Bajo revisión administrativa</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Aprobada</td>
+              <td>ApplicationAccessRequest|UserRequest</td>
+              <td>Aprobada, desencadena aprovisionamiento</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>Rechazada</td>
+              <td>ApplicationAccessRequest|UserRequest</td>
+              <td>Rechazada, envía notificación</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Migrations/20250819140708_Init-Create.cs (789-798)
+        </div>
+
+        <h3>Máquina de Estados de UserRequest</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm font-mono">
+          [Diagrama: Transiciones de Estado de UserRequest]
+        </div>
+        <p>
+          El <code>UserRequestService</code> maneja las transiciones. Cuando StatusId cambia a 4 (Aprobada), el servicio
+          crea un registro <code>Person</code> (vinculado por Person.UserRequestId) y luego un registro
+          <code>User</code> (vinculado por User.PersonId).
+        </p>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          UserRequest.cs (8-37) • PersonDto.cs (9)
+        </div>
+
+        <h3>Máquina de Estados de ApplicationAccessRequest</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm font-mono">
+          [Diagrama: Transiciones de Estado de ApplicationAccessRequest]
+        </div>
+        <p>
+          El método <code>ApplicationAccessRequestService.GiveAccess()</code> maneja la lógica cuando StatusId
+          transiciona a 4 (Aprobada), creando registros <code>ApplicationUser</code> y
+          <code>ApplicationModuleAccess</code>.
+        </p>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          ApplicationAccessRequestConfiguration.cs (20) • Migrations (359)
+        </div>
+
+        <h2>Relaciones de Entidades y Claves Foráneas</h2>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm font-mono">
+          [Diagrama: Relaciones de Clave Foránea de Base de Datos]
+        </div>
+
+        <h3>Restricciones de Clave Foránea</h3>
+
+        <h4>Claves Foráneas de UserRequest</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Clave Foránea</th>
+              <th>Referencia</th>
+              <th>Eliminación</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>InstitutionId</td>
+              <td>Institution.InstitutionId</td>
+              <td>CASCADE</td>
+              <td>Afiliación opcional</td>
+            </tr>
+            <tr>
+              <td>DocumentTypeId</td>
+              <td>DocumentType.DocumentTypeId</td>
+              <td>CASCADE</td>
+              <td>Tipo doc requerido</td>
+            </tr>
+            <tr>
+              <td>GenderId</td>
+              <td>Gender.GenderId</td>
+              <td>CASCADE</td>
+              <td>Género requerido</td>
+            </tr>
+            <tr>
+              <td>StatusId</td>
+              <td>Status.StatusId</td>
+              <td>CASCADE</td>
+              <td>Estado requerido</td>
+            </tr>
+            <tr>
+              <td>UserProccesatorId</td>
+              <td>User.UserId</td>
+              <td>NO ACTION</td>
+              <td>Procesador opcional</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>Claves Foráneas de ApplicationAccessRequest</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Clave Foránea</th>
+              <th>Referencia</th>
+              <th>Eliminación</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ApplicationId</td>
+              <td>Application.ApplicationId</td>
+              <td>NO ACTION</td>
+              <td>App destino</td>
+            </tr>
+            <tr>
+              <td>UserId</td>
+              <td>User.UserId</td>
+              <td>NO ACTION</td>
+              <td>Solicitante opcional</td>
+            </tr>
+            <tr>
+              <td>UserRequestId</td>
+              <td>UserRequest.UserRequestId</td>
+              <td>NO ACTION</td>
+              <td>Solicitud vinculada</td>
+            </tr>
+            <tr>
+              <td>UserProccesatorId</td>
+              <td>User.UserId</td>
+              <td>NO ACTION</td>
+              <td>Procesador admin</td>
+            </tr>
+            <tr>
+              <td>StatusId</td>
+              <td>Status.StatusId</td>
+              <td>NO ACTION</td>
+              <td>Estado requerido</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="text-sm mt-2">
+          El comportamiento <strong>NO ACTION</strong> en <code>ApplicationAccessRequest</code> preserva el historial de
+          auditoría incluso si las referencias se eliminan suavemente. <strong>CASCADE</strong> en
+          <code>UserRequest</code> asegura limpieza de huérfanos.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          Configuraciones (UserRequest, ApplicationAccessRequest) • Migraciones
+        </div>
+
+        <h2>Restricciones Únicas e Índices</h2>
+
+        <h3>Restricciones Únicas de UserRequest</h3>
+        <p>
+          No tiene restricciones únicas explícitas en BD. Se basa en validación de aplicación (UserRequestValidator) y
+          en la unicidad de campos Document/Email en la entidad Person descendente.
+        </p>
+
+        <h3>Restricciones Únicas de ApplicationAccessRequest</h3>
+        <p>Aplica unicidad mediante índices únicos filtrados:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Índice</th>
+              <th>Columna</th>
+              <th>Filtro</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>IX_..._UserId</td>
+              <td>UserId</td>
+              <td>[UserId] IS NOT NULL</td>
+              <td>Previene duplicados user/app</td>
+            </tr>
+            <tr>
+              <td>IX_..._UserId1</td>
+              <td>UserId1</td>
+              <td>[UserId1] IS NOT NULL</td>
+              <td>Propiedad sombra EF</td>
+            </tr>
+            <tr>
+              <td>IX_..._UserRequestId</td>
+              <td>UserRequestId</td>
+              <td>[UserRequestId] IS NOT NULL</td>
+              <td>Una solicitud por user request</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Índices No Únicos</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Tabla</th>
+              <th>Índice</th>
+              <th>Columna</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ApplicationAccessRequest</td>
+              <td>IX_..._ApplicationId</td>
+              <td>ApplicationId</td>
+              <td>Performance por app</td>
+            </tr>
+            <tr>
+              <td>ApplicationAccessRequest</td>
+              <td>IX_..._StatusId</td>
+              <td>StatusId</td>
+              <td>Performance por estado</td>
+            </tr>
+            <tr>
+              <td>ApplicationAccessRequest</td>
+              <td>IX_..._UserProccesatorId</td>
+              <td>UserProccesatorId</td>
+              <td>Performance por procesador</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          Migrations (155-173) • ModelSnapshot
+        </div>
+
+        <h2>Flujo de Procesamiento de Solicitudes y Aprovisionamiento</h2>
+
+        <h3>Flujo de Aprovisionamiento de UserRequest</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm font-mono">
+          [Diagrama: UserRequest a Creación de Cuenta de Usuario]
+        </div>
+        <ol>
+          <li>UserRequestService valida datos (UserRequestValidator).</li>
+          <li>Persistencia en UserRequest con StatusId = 2 (Pendiente).</li>
+          <li>Revisión Admin actualiza a StatusId 4 (Aprobada) o 5 (Rechazada).</li>
+          <li>Si aprueba: crea <code>Person</code> (con FK Person.UserRequestId).</li>
+          <li>Luego crea <code>User</code> (con FK User.PersonId y User.UserRequestId).</li>
+          <li>Genera automáticamente <code>ApplicationAccessRequest</code> para aplicación por defecto.</li>
+          <li>MailService envía notificación.</li>
+        </ol>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          UserRequest.cs • PersonDto.cs • Migrations
+        </div>
+
+        <h3>Flujo de Aprovisionamiento de ApplicationAccessRequest</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm font-mono">
+          [Diagrama: ApplicationAccessRequest a Otorgamiento de Permisos]
+        </div>
+        <p>El método <code>ApplicationAccessRequestService.GiveAccess()</code>:</p>
+        <ul class="list-disc pl-6 space-y-1 mb-4">
+          <li>Valida existencia de User y Application.</li>
+          <li>Crea registro <code>ApplicationUser</code>.</li>
+          <li>Crea registros <code>ApplicationModuleAccess</code> con PermissionValue (bits 1=MANAGE, 2=POST, etc.).
+          </li>
+          <li>Envía notificación vía MailService.</li>
+        </ul>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          ApplicationAccessRequestConfiguration.cs • Migrations
+        </div>
+
+        <h2>Puntos de Integración e Interacciones del Sistema</h2>
+
+        <h3>Integración con Contexto de Base de Datos</h3>
+        <p>MainDbContext expone los DbSets y maneja auditoría:</p>
+        <pre><code class="language-csharp">DbSet&lt;UserRequest&gt; UsersRequests { get; set; }
+DbSet&lt;ApplicationAccessRequest&gt; ApplicationsAccessRequests { get; set; }
+// Heredan de EntityAuditableBase -> SaveChanges() llena CreatedBy, etc.</code></pre>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          MainDbContext.cs (63-64, 104-130)
+        </div>
+
+        <h3>Filtro de Eliminación Suave</h3>
+        <pre><code class="language-csharp">foreach (var type in modelBuilder.Model.GetEntityTypes()
+    .Where(type => typeof(IEntityBase).IsAssignableFrom(type.ClrType)))
+{
+    modelBuilder.SetSoftDeleteFilter(type.ClrType);
+}</code></pre>
+        <p>Excluye registros con <code>IsDeleted = true</code> para ocultar solicitudes rechazadas/canceladas sin perder
+          historial.</p>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          MainDbContext.cs (37-41)
+        </div>
+
+        <h3>Integración con Capa de Servicios</h3>
+        <ul>
+          <li><code>UserRequestService</code> (BaseRepository&lt;UserRequest&gt;)</li>
+          <li><code>ApplicationAccessRequestService</code> (BaseRepository&lt;ApplicationAccessRequest&gt;)</li>
+          <li>Uso de IMapper y FluentValidation (IValidator&lt;T&gt;)</li>
+        </ul>
+
+        <h3>Integración con Servicios Externos</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Servicio</th>
+              <th>Punto</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>MailService</td>
+              <td>Cambio estado</td>
+              <td>Notificaciones email</td>
+            </tr>
+            <tr>
+              <td>ActiveDirectoryService</td>
+              <td>Aprobación UserRequest</td>
+              <td>Sync AD si IsExternal=true</td>
+            </tr>
+            <tr>
+              <td>MailTemplate</td>
+              <td>Generación correo</td>
+              <td>Plantillas HTML (System)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Cascada de Creación de Entidades</h3>
+        <p><strong>UserRequest (StatusId=4) desencadena:</strong> Person, User, ApplicationAccessRequest.</p>
+        <p><strong>ApplicationAccessRequest (StatusId=4) desencadena:</strong> ApplicationUser, ApplicationModuleAccess.
+        </p>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

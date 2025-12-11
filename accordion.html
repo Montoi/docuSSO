@@ -16,11 +16,18 @@
             theme: {
                 extend: {
                     colors: {
-                        'body': 'oklch(0.98 0.001 264)',
-                        'primary': 'oklch(0.12 0.02 264 / 0.9)',
-                        'link': 'oklch(0.45 0.2 264)',
-                        'code': '#ffffff',
-                    },
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
                     fontFamily: {
                         'sans': ['"Unica 77"', 'Inter', 'system-ui', 'sans-serif'],
                     },
@@ -59,42 +66,10 @@
 
     <div class="flex min-h-screen relative">
         <!-- Sidebar -->
+        <!-- Sidebar -->
         <nav id="sidebar"
             class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-gray-100/50 p-6 bg-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block shadow-xl lg:shadow-none">
-            <div class="mb-8 hidden lg:block">
-                <span class="font-bold text-xl tracking-tight text-gray-900">Base UI</span>
-            </div>
-            <ul class="space-y-1 text-sm font-medium">
-                <li>
-                    <a href="index.html"
-                        class="block px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Overview</a>
-                </li>
-                <li>
-                    <a href="quick-start.html"
-                        class="block px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Quick
-                        start</a>
-                </li>
-                <li>
-                    <a href="introduction.html"
-                        class="block px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Introduction</a>
-                </li>
-                <li>
-                    <a href="#"
-                        class="block px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Browser
-                        support</a>
-                </li>
-
-                <li class="pt-6 pb-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Components</li>
-
-                <li>
-                    <a href="accordion.html"
-                        class="block px-3 py-2 text-primary bg-gray-100 rounded-md transition-colors">Accordion</a>
-                </li>
-                <li>
-                    <a href="#"
-                        class="block px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">AlertDialog</a>
-                </li>
-            </ul>
+            <!-- Content populated by main.js -->
         </nav>
 
         <!-- Main Content -->

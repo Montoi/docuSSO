@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Access Request APIs - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">API Controllers</div>
+
+      <h1>APIs de Solicitudes de Acceso</h1>
+
+      <section class="prose prose-invert max-w-none">
+
+        <h2>Propósito y Alcance</h2>
+        <p>
+          Este documento describe los endpoints de la API REST que gestionan el flujo de trabajo de solicitudes de
+          acceso a aplicaciones en el sistema SSO. Estos endpoints manejan la creación, procesamiento y aprobación de
+          solicitudes de acceso de nuevos usuarios a través de la entidad <code>ApplicationAccessRequest</code>.
+        </p>
+        <p>
+          El flujo de trabajo de solicitudes de acceso permite a usuarios externos (como representantes de
+          instituciones) solicitar cuentas SSO para nuevos usuarios, y permite a los administradores del sistema
+          revisar, aprobar o rechazar estas solicitudes. Al aprobar, el sistema automáticamente provisiona cuentas de
+          usuario y otorga permisos a nivel de aplicación.
+        </p>
+        <p>
+          Para el esquema de base de datos y relaciones de entidades, ver <a href="access-request-schema.html"
+            class="text-accent hover:underline">Esquema de Gestión de Solicitudes de Acceso</a>. Para la implementación
+          de la lógica de negocio, ver <a href="access-request-services.html"
+            class="text-accent hover:underline">Servicios de Solicitudes de Acceso</a>. Para endpoints generales de
+          gestión de usuarios, ver <a href="user-management-apis.html" class="text-accent hover:underline">APIs de
+            Gestión de Usuarios</a>.
+        </p>
+
+        <h2>Descripción General del Flujo de Solicitudes de Acceso</h2>
+        <p>
+          El sistema de solicitudes de acceso implementa un flujo de trabajo de aprobación en múltiples pasos donde las
+          nuevas cuentas de usuario se crean a través de un proceso formal de solicitud:
+        </p>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo General de Solicitudes]
+        </div>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/EntityConfigurations/Core/ApplicationAccessRequestConfiguration.cs (20)
+        </div>
+
+        <h2>Entidades Principales</h2>
+        <p>El flujo de trabajo de solicitudes de acceso involucra tres entidades primarias:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Entidad</th>
+              <th>Propósito</th>
+              <th>Campos Clave</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>UserRequest</td>
+              <td>Almacena datos demográficos del usuario solicitado</td>
+              <td>Document, FirstName, LastName, Email, UserName, InstitutionId, StatusId</td>
+            </tr>
+            <tr>
+              <td>ApplicationAccessRequest</td>
+              <td>Vincula un UserRequest a una Application específica</td>
+              <td>UserRequestId, ApplicationId, UserId, StatusId, UserProccesatorId</td>
+            </tr>
+            <tr>
+              <td>Person</td>
+              <td>Creada después de la aprobación, almacena datos demográficos del usuario aprobado</td>
+              <td>UserRequestId (enlaza de vuelta a la solicitud original)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>Relaciones:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>UserRequest</strong> tiene una relación uno-a-uno con <strong>ApplicationAccessRequest</strong>
+            (SSO.DataModel/EntityConfigurations/Core/ApplicationAccessRequestConfiguration.cs 23-26)</li>
+          <li><strong>ApplicationAccessRequest</strong> referencia tanto <strong>UserRequest</strong> (datos de usuario
+            pendiente) como <strong>User</strong> (usuario aprobado, poblado después de aprobación)
+            (SSO.DataModel/Entities/Core/ApplicationAccessRequest.cs 13-15)</li>
+          <li><strong>Person</strong> mantiene <strong>UserRequestId</strong> para rastrear qué solicitud llevó a la
+            creación de cuenta (SSO.BusinessLayer/Dtos/General/PersonDto.cs 9)</li>
+        </ul>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Relaciones de Entidades]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Entities/Core/ApplicationAccessRequest.cs (1-28) • SSO.DataModel/Entities/Core/UserRequest.cs
+          (1-39) • SSO.BusinessLayer/Dtos/General/PersonDto.cs (9) •
+          SSO.DataModel/EntityConfigurations/Core/ApplicationAccessRequestConfiguration.cs (15-47)
+        </div>
+
+        <h2>Endpoints de la API</h2>
+
+        <h3>Crear Solicitud de Acceso</h3>
+        <p><strong>Endpoint:</strong> <code>POST /api/ApplicationAccessRequest</code></p>
+        <p>
+          Crea una nueva solicitud de acceso para que un usuario acceda a una aplicación específica. La solicitud puede
+          vincularse a un UserRequest existente (para usuarios completamente nuevos) o directamente a un User existente
+          (para usuarios existentes que solicitan acceso a aplicaciones adicionales).
+        </p>
+
+        <h4>Cuerpo de la Solicitud:</h4>
+        <pre><code class="language-json">{
+  "userRequestId": 123,
+  "userId": null,
+  "applicationId": 1002,
+  "statusId": 1,
+  "observacion": "Usuario requiere acceso al sistema SISPLAN"
+}</code></pre>
+
+        <h4>Respuesta:</h4>
+        <pre><code class="language-json">{
+  "status": true,
+  "code": 201,
+  "data": {
+    "id": 456,
+    "userRequestId": 123,
+    "userId": null,
+    "applicationId": 1002,
+    "statusId": 1,
+    "observacion": "Usuario requiere acceso al sistema SISPLAN",
+    "registrationDate": "2024-01-15T10:30:00Z",
+    "userRequest": {
+      "id": 123,
+      "firstName": "Juan",
+      "lastName": "Pérez",
+      "email": "juan.perez@example.com"
+    },
+    "application": {
+      "id": 1002,
+      "name": "SISPLAN"
+    }
+  }
+}</code></pre>
+        <p><strong>Valores por Defecto:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>StatusId</strong> tiene como valor por defecto <code>EntityEstatus.EnEspera</code> (estado en
+            espera) si no se proporciona</li>
+          <li><strong>Observacion</strong> tiene como valor por defecto "Solicitud creación de nuevo usuario"</li>
+        </ul>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/EntityConfigurations/Core/ApplicationAccessRequestConfiguration.cs (20-21)
+        </div>
+
+        <h3>Obtener Solicitudes de Acceso</h3>
+        <p><strong>Endpoint:</strong> <code>GET /api/ApplicationAccessRequest</code></p>
+        <p>Recupera una lista paginada de todas las solicitudes de acceso, con filtrado opcional por estado, aplicación
+          o usuario.</p>
+
+        <h4>Parámetros de Consulta:</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Parámetro</th>
+              <th>Tipo</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>pageNumber</td>
+              <td>int</td>
+              <td>Número de página (por defecto: 1)</td>
+            </tr>
+            <tr>
+              <td>pageSize</td>
+              <td>int</td>
+              <td>Elementos por página (por defecto: 10)</td>
+            </tr>
+            <tr>
+              <td>statusId</td>
+              <td>int?</td>
+              <td>Filtrar por estado</td>
+            </tr>
+            <tr>
+              <td>applicationId</td>
+              <td>int?</td>
+              <td>Filtrar por aplicación</td>
+            </tr>
+            <tr>
+              <td>userRequestId</td>
+              <td>int?</td>
+              <td>Filtrar por solicitud de usuario</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>Respuesta:</h4>
+        <pre><code class="language-json">{
+  "status": true,
+  "code": 200,
+  "data": {
+    "items": [
+      {
+        "id": 456,
+        "userRequestId": 123,
+        "applicationId": 1002,
+        "statusId": 1,
+        "observacion": "Usuario requiere acceso al sistema SISPLAN",
+        "registrationDate": "2024-01-15T10:30:00Z"
+      }
+    ],
+    "totalCount": 45,
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalPages": 5
+  }
+}</code></pre>
+
+        <h3>Obtener Solicitud de Acceso por ID</h3>
+        <p><strong>Endpoint:</strong> <code>GET /api/ApplicationAccessRequest/{id}</code></p>
+        <p>Recupera una solicitud de acceso específica con todas las propiedades de navegación incluyendo las entidades
+          relacionadas UserRequest, User, Application y Status.</p>
+
+        <h4>Respuesta:</h4>
+        <pre><code class="language-json">{
+  "status": true,
+  "code": 200,
+  "data": {
+    "id": 456,
+    "userRequestId": 123,
+    "userId": null,
+    "applicationId": 1002,
+    "statusId": 1,
+    "userProccesatorId": null,
+    "observacion": "Usuario requiere acceso al sistema SISPLAN",
+    "registrationDate": "2024-01-15T10:30:00Z",
+    "userRequest": {
+      "id": 123,
+      "document": "00112345678",
+      "firstName": "Juan",
+      "lastName": "Pérez",
+      "email": "juan.perez@example.com",
+      "userName": "jperez",
+      "institutionId": 5,
+      "institutionName": "Ministerio de Economía"
+    },
+    "application": {
+      "id": 1002,
+      "name": "SISPLAN",
+      "callbackUrl": "https://sisplan.example.com"
+    },
+    "status": {
+      "id": 1,
+      "name": "En Espera"
+    }
+  }
+}</code></pre>
+
+        <h3>Actualizar Estado de Solicitud de Acceso</h3>
+        <p><strong>Endpoint:</strong> <code>PUT /api/ApplicationAccessRequest/{id}/status</code></p>
+        <p>Actualiza el estado de una solicitud de acceso mientras avanza a través del flujo de trabajo de aprobación.
+          Este endpoint típicamente es utilizado por administradores para marcar solicitudes como "en proceso" o para
+          agregar observaciones.</p>
+
+        <h4>Cuerpo de la Solicitud:</h4>
+        <pre><code class="language-json">{
+  "statusId": 2,
+  "userProccesatorId": 789,
+  "observacion": "Revisando documentación del solicitante"
+}</code></pre>
+
+        <h4>Respuesta:</h4>
+        <pre><code class="language-json">{
+  "status": true,
+  "code": 200,
+  "message": "Estado actualizado correctamente"
+}</code></pre>
+
+        <h3>Aprobar Solicitud de Acceso</h3>
+        <p><strong>Endpoint:</strong> <code>POST /api/ApplicationAccessRequest/{id}/approve</code></p>
+        <p>Aprueba una solicitud de acceso, desencadenando el flujo de trabajo de provisión automática. Este endpoint:
+        </p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Crea una nueva entidad <strong>User</strong> (si se proporciona UserRequestId)</li>
+          <li>Crea una entidad <strong>Person</strong> con los datos demográficos</li>
+          <li>Crea una relación <strong>ApplicationUser</strong> otorgando acceso a la aplicación especificada</li>
+          <li>Actualiza el estado de la solicitud a "Aprobado"</li>
+          <li>Envía notificación por correo al solicitante</li>
+        </ul>
+
+        <h4>Cuerpo de la Solicitud:</h4>
+        <pre><code class="language-json">{
+  "userProccesatorId": 789,
+  "observacion": "Solicitud aprobada por el departamento de TI"
+}</code></pre>
+
+        <h4>Respuesta:</h4>
+        <pre><code class="language-json">{
+  "status": true,
+  "code": 200,
+  "data": {
+    "accessRequestId": 456,
+    "userId": 999,
+    "username": "jperez",
+    "temporaryPassword": "TempPass123!",
+    "applicationAccess": {
+      "applicationId": 1002,
+      "applicationName": "SISPLAN",
+      "accessGrantedDate": "2024-01-15T14:30:00Z"
+    }
+  },
+  "message": "Usuario creado y acceso otorgado correctamente"
+}</code></pre>
+        <p><strong>Lógica de Negocio (referencias a la capa de servicio):</strong></p>
+        <p>El proceso de aprobación invoca el método <code>GiveAccess</code> en
+          <code>ApplicationAccessRequestService</code>, que orquesta las siguientes operaciones:</p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>Creación de cuenta de usuario con contraseña por defecto del sistema</li>
+          <li>Creación de entidad Person vinculada al UserRequest</li>
+          <li>Creación de relación ApplicationUser</li>
+          <li>Notificación por correo vía <code>MailService.SendEmail()</code></li>
+          <li>Actualización de estado a <code>EntityEstatus.Aprobado</code></li>
+        </ol>
+        <p>Para detalles de implementación, ver <a href="access-request-services.html"
+            class="text-accent hover:underline">Servicios de Solicitudes de Acceso</a>.</p>
+
+        <h3>Rechazar Solicitud de Acceso</h3>
+        <p><strong>Endpoint:</strong> <code>POST /api/ApplicationAccessRequest/{id}/reject</code></p>
+        <p>Rechaza una solicitud de acceso, cerrándola sin provisionar cuentas de usuario ni permisos.</p>
+
+        <h4>Cuerpo de la Solicitud:</h4>
+        <pre><code class="language-json">{
+  "userProccesatorId": 789,
+  "observacion": "Documentación incompleta - falta comprobante de identidad"
+}</code></pre>
+
+        <h4>Respuesta:</h4>
+        <pre><code class="language-json">{
+  "status": true,
+  "code": 200,
+  "message": "Solicitud rechazada correctamente"
+}</code></pre>
+
+        <h2>Flujo de Procesamiento de Solicitudes</h2>
+        <p>El siguiente diagrama muestra cómo las solicitudes de API fluyen a través de las capas del sistema:</p>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo de Procesamiento de Extremo a Extremo]
+        </div>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Entities/Core/ApplicationAccessRequest.cs (11-26) •
+          SSO.DataModel/EntityConfigurations/Core/ApplicationAccessRequestConfiguration.cs (20-21)
+        </div>
+
+        <h2>Reglas de Transición de Estados</h2>
+        <p>
+          La entidad <code>ApplicationAccessRequest</code> rastrea su ciclo de vida a través del campo
+          <code>StatusId</code>. La siguiente tabla define las transiciones de estado válidas:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Estado Origen</th>
+              <th>Estado Destino</th>
+              <th>Desencadenado Por</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>EnEspera (1)</td>
+              <td>EnProceso (2)</td>
+              <td>Administrador se asigna a sí mismo</td>
+              <td>Establece UserProccesatorId</td>
+            </tr>
+            <tr>
+              <td>EnProceso (2)</td>
+              <td>Aprobado (3)</td>
+              <td>Endpoint de aprobación</td>
+              <td>Llama a GiveAccess(), provisiona usuario</td>
+            </tr>
+            <tr>
+              <td>EnProceso (2)</td>
+              <td>Rechazado (4)</td>
+              <td>Endpoint de rechazo</td>
+              <td>Cierra solicitud, sin provisión</td>
+            </tr>
+            <tr>
+              <td>EnEspera (1)</td>
+              <td>Rechazado (4)</td>
+              <td>Rechazo directo</td>
+              <td>Cierra solicitud sin revisión</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>Transiciones Inválidas:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>No se puede pasar de Aprobado o Rechazado a ningún otro estado (estados terminales)</li>
+          <li>No se puede aprobar sin establecer UserProccesatorId (debe asignarse primero)</li>
+        </ul>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/EntityConfigurations/Core/ApplicationAccessRequestConfiguration.cs (20)
+        </div>
+
+        <h2>Objetos de Transferencia de Datos</h2>
+        <p>Los endpoints de solicitud de acceso utilizan las siguientes estructuras DTO:</p>
+
+        <h4>ApplicationAccessRequestDto</h4>
+        <pre><code class="language-text">ApplicationAccessRequestDto
+├── Id (int)
+├── UserRequestId (int?)
+├── UserId (int?)
+├── ApplicationId (int)
+├── StatusId (int)
+├── UserProccesatorId (int?)
+├── Observacion (string)
+├── RegistrationDate (DateTime)
+├── ModificationDate (DateTime?)
+├── Propiedades de Navegación:
+│   ├── UserRequest (UserRequestDto)
+│   ├── User (UserDto)
+│   ├── UserProccesator (UserDto)
+│   ├── Application (ApplicationDto)
+│   └── Status (StatusDto)</code></pre>
+
+        <p><strong>DTOs Relacionados:</strong></p>
+        <p><strong>UserRequestDto</strong> - Contiene datos demográficos para solicitudes de nuevos usuarios:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Document, FirstName, LastName, Email, UserName</li>
+          <li>InstitutionId, StatusId, GenderId, DocumentTypeId</li>
+          <li>Telephone, Extension, Cellphone, Observacion</li>
+        </ul>
+        <p>Para estructuras detalladas de DTOs, ver <a href="user-person-dtos.html"
+            class="text-accent hover:underline">DTOs de Usuario y Persona</a> y <a href="application-dtos.html"
+            class="text-accent hover:underline">DTOs de Aplicación</a>.</p>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Entities/Core/ApplicationAccessRequest.cs (11-26) • SSO.DataModel/Entities/Core/UserRequest.cs
+          (7-38)
+        </div>
+
+        <h2>Requisitos de Autorización</h2>
+        <p>El acceso a los endpoints de Solicitudes de Acceso a Aplicaciones requiere permisos específicos:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Permiso Requerido</th>
+              <th>Notas</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>POST /create</td>
+              <td>Usuario autenticado</td>
+              <td>Cualquier usuario autenticado puede crear solicitudes</td>
+            </tr>
+            <tr>
+              <td>GET /list</td>
+              <td>Administrador o propietario de solicitud</td>
+              <td>Los usuarios ven solo sus propias solicitudes; los administradores ven todas</td>
+            </tr>
+            <tr>
+              <td>GET /{id}</td>
+              <td>Administrador o propietario de solicitud</td>
+              <td>Acceso restringido a las partes involucradas</td>
+            </tr>
+            <tr>
+              <td>PUT /status</td>
+              <td>Administrador (IsRoot=true o permiso específico)</td>
+              <td>Solo administradores pueden actualizar estado</td>
+            </tr>
+            <tr>
+              <td>POST /approve</td>
+              <td>Administrador con permiso de aprobación</td>
+              <td>Requiere privilegios elevados</td>
+            </tr>
+            <tr>
+              <td>POST /reject</td>
+              <td>Administrador con permiso de aprobación</td>
+              <td>Requiere privilegios elevados</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p><strong>Autenticación:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Todos los endpoints requieren token JWT válido en el encabezado Authorization: Bearer {token}</li>
+          <li>El JWT debe contener claim UserId para verificaciones de propiedad</li>
+        </ul>
+
+        <p><strong>Modelo de Permisos:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Los administradores tienen bandera <strong>IsRoot=true</strong>, otorgando acceso completo</li>
+          <li>Los usuarios regulares solo pueden ver/crear solicitudes que iniciaron</li>
+          <li>La asignación de procesador (UserProccesatorId) otorga acceso de lectura al administrador asignado</li>
+        </ul>
+        <p>Para detalles de autenticación, ver <a href="authentication-flow.html"
+            class="text-accent hover:underline">Flujo de Autenticación</a>. Para detalles del sistema de permisos, ver
+          <a href="permission-system.html" class="text-accent hover:underline">Sistema de Permisos</a>.</p>
+
+        <h2>Notificaciones por Correo Electrónico</h2>
+        <p>El flujo de trabajo de solicitudes de acceso se integra con el <code>MailService</code> para enviar
+          notificaciones en puntos clave del flujo:</p>
+
+        <h3>Disparadores de Correo</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Disparador</th>
+              <th>Destinatario</th>
+              <th>Plantilla</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Solicitud Creada</td>
+              <td>Administradores del sistema</td>
+              <td>NewAccessRequest</td>
+              <td>Notificar a administradores de solicitud pendiente</td>
+            </tr>
+            <tr>
+              <td>Estado Actualizado</td>
+              <td>Creador de solicitud</td>
+              <td>RequestStatusUpdate</td>
+              <td>Informar al usuario del estado de procesamiento</td>
+            </tr>
+            <tr>
+              <td>Solicitud Aprobada</td>
+              <td>Nuevo usuario</td>
+              <td>AccessGranted</td>
+              <td>Proporcionar credenciales y próximos pasos</td>
+            </tr>
+            <tr>
+              <td>Solicitud Rechazada</td>
+              <td>Creador de solicitud</td>
+              <td>AccessRejected</td>
+              <td>Explicar razón del rechazo</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Estructura de Contenido del Correo</h3>
+        <p>El método <code>CreateEmail</code> en <code>ApplicationAccessRequestService</code> genera correos con:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>Asunto:</strong> Incluye nombre de aplicación e ID de solicitud</li>
+          <li><strong>Cuerpo:</strong> Detalles de solicitud, estado actual y observaciones relevantes</li>
+          <li><strong>Adjuntos:</strong> Puede incluir PDFs de guía de usuario para usuarios aprobados</li>
+        </ul>
+        <p>Para implementación del servicio de correo, ver <a href="supporting-services.html"
+            class="text-accent hover:underline">Servicios de Soporte</a>.</p>
+
+        <h2>Integración con Otros Subsistemas</h2>
+        <p>Las APIs de Solicitudes de Acceso se integran con múltiples componentes del sistema:</p>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Integración de Subsistemas]
+        </div>
+
+        <p><strong>Puntos Clave de Integración:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>Gestión de Usuarios:</strong> Las solicitudes aprobadas desencadenan la creación de usuarios vía
+            UserService. Ver <a href="user-management-apis.html" class="text-accent hover:underline">APIs de Gestión de
+              Usuarios</a></li>
+          <li><strong>Gestión de Personas:</strong> Los datos demográficos de UserRequest se transfieren a la entidad
+            Person</li>
+          <li><strong>Acceso a Aplicaciones:</strong> Se crean relaciones ApplicationUser para otorgar acceso</li>
+          <li><strong>Sistema de Correo:</strong> Todos los cambios de estado generan notificaciones por correo vía
+            MailService</li>
+          <li><strong>Pista de Auditoría:</strong> Todas las operaciones se rastrean con campos CreatedBy,
+            RegistrationDate, UpdateBy, ModificationDate</li>
+        </ul>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Entities/Core/ApplicationAccessRequest.cs (11-26) • SSO.DataModel/Entities/Core/UserRequest.cs
+          (7-38)
+        </div>
+
+        <h2>Manejo de Errores</h2>
+        <p>La API retorna respuestas de error estandarizadas usando el patrón <code>OperationResult&lt;T&gt;</code>:</p>
+
+        <h3>Errores de Validación (400 Bad Request)</h3>
+        <pre><code class="language-json">{
+  "status": false,
+  "code": 400,
+  "errors": [
+    "ApplicationId es requerido",
+    "Email debe tener un formato válido"
+  ]
+}</code></pre>
+
+        <h3>Errores de No Encontrado (404)</h3>
+        <pre><code class="language-json">{
+  "status": false,
+  "code": 404,
+  "message": "Solicitud de acceso no encontrada"
+}</code></pre>
+
+        <h3>Errores de Autorización (403 Forbidden)</h3>
+        <pre><code class="language-json">{
+  "status": false,
+  "code": 403,
+  "message": "No tiene permisos para aprobar solicitudes"
+}</code></pre>
+
+        <h3>Errores de Lógica de Negocio (409 Conflict)</h3>
+        <pre><code class="language-json">{
+  "status": false,
+  "code": 409,
+  "message": "La solicitud ya fue procesada anteriormente"
+}</code></pre>
+
+        <h2>Ejemplo de Flujo: Ciclo de Vida Completo de Solicitud de Acceso</h2>
+        <p>La siguiente secuencia demuestra un escenario típico de solicitud de acceso de principio a fin:</p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li><strong>Usuario externo crea solicitud:</strong>
+            <ul class="list-disc pl-6 mt-1">
+              <li>POST /api/UserRequest → Crea UserRequest con datos demográficos</li>
+              <li>POST /api/ApplicationAccessRequest → Vincula UserRequest a Application (SISPLAN), StatusId = EnEspera
+                (1), Correo enviado a administradores</li>
+            </ul>
+          </li>
+          <li><strong>Administrador revisa solicitud:</strong>
+            <ul class="list-disc pl-6 mt-1">
+              <li>GET /api/ApplicationAccessRequest?statusId=1 → Lista todas las solicitudes pendientes</li>
+              <li>GET /api/ApplicationAccessRequest/456 → Ve detalles completos de la solicitud</li>
+              <li>PUT /api/ApplicationAccessRequest/456/status → StatusId = EnProceso (2), UserProccesatorId = 789
+                (asignado a sí mismo)</li>
+            </ul>
+          </li>
+          <li><strong>Administrador aprueba solicitud:</strong>
+            <ul class="list-disc pl-6 mt-1">
+              <li>POST /api/ApplicationAccessRequest/456/approve → Ejecuta método GiveAccess()</li>
+              <li>Crea User (Id: 999, Username: jperez), Person (vinculado a UserRequestId: 123), ApplicationUser
+                (UserId: 999, ApplicationId: 1002)</li>
+              <li>StatusId = Aprobado (3)</li>
+              <li>Correo enviado al nuevo usuario con credenciales</li>
+            </ul>
+          </li>
+          <li><strong>Nuevo usuario inicia sesión:</strong>
+            <ul class="list-disc pl-6 mt-1">
+              <li>POST /api/User/login → Username: jperez, Password: (contraseña temporal del correo)</li>
+              <li>Retorna token JWT</li>
+              <li>Bandera ResetPassword = true → cambio de contraseña forzado</li>
+            </ul>
+          </li>
+        </ol>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

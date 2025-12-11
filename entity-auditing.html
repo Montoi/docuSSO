@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entity Auditing - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Data Access Layer</div>
+
+      <h1>Auditoría de Entidades</h1>
+
+      <section class="prose prose-invert max-w-none">
+
+        <h2>Propósito y Alcance</h2>
+        <p>
+          La Auditoría de Entidades proporciona seguimiento automático de los metadatos del ciclo de vida de las
+          entidades, incluyendo marcas de tiempo de creación, modificación y atribución de usuarios. El sistema
+          intercepta las operaciones SaveChanges de Entity Framework Core para poblar los campos de auditoría de manera
+          transparente, e implementa funcionalidad de eliminación lógica para preservar el historial de datos. Esta
+          página documenta el esquema de campos de auditoría, el mecanismo de intercepción del MainDbContext, y el
+          filtro de consulta global que excluye registros eliminados lógicamente.
+        </p>
+        <p>
+          Para información sobre el patrón repositorio que consume esta infraestructura de auditoría, ver <a
+            href="repository-pattern.html" class="text-accent hover:underline">Patrón Repositorio</a>. Para detalles
+          sobre la validación que ocurre antes de la persistencia, ver <a href="validation-framework.html"
+            class="text-accent hover:underline">Framework de Validación</a>.
+        </p>
+
+        <h2>Esquema de Campos de Auditoría</h2>
+        <p>
+          Todas las entidades auditables heredan de <code>EntityAuditableBase</code> que implementa la interfaz
+          <code>IEntityBase</code>. Los siguientes campos son gestionados automáticamente:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre del Campo</th>
+              <th>Tipo</th>
+              <th>Propósito</th>
+              <th>Poblado En</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CreatedBy</td>
+              <td>int</td>
+              <td>ID del usuario que creó la entidad</td>
+              <td>INSERT</td>
+            </tr>
+            <tr>
+              <td>RegistrationDate</td>
+              <td>DateTimeOffset</td>
+              <td>Marca de tiempo de creación de la entidad</td>
+              <td>INSERT</td>
+            </tr>
+            <tr>
+              <td>UpdateBy</td>
+              <td>int</td>
+              <td>ID del usuario que modificó la entidad por última vez</td>
+              <td>UPDATE</td>
+            </tr>
+            <tr>
+              <td>ModificationDate</td>
+              <td>DateTimeOffset?</td>
+              <td>Marca de tiempo de la última modificación</td>
+              <td>UPDATE</td>
+            </tr>
+            <tr>
+              <td>IsActive</td>
+              <td>bool</td>
+              <td>Indica si la entidad está activa</td>
+              <td>INSERT (predeterminado: true)</td>
+            </tr>
+            <tr>
+              <td>IsDeleted</td>
+              <td>bool</td>
+              <td>Bandera de eliminación lógica</td>
+              <td>DELETE (se establece en true)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <strong>Importante:</strong> Los campos de auditoría no son anulables (excepto ModificationDate), asegurando
+          que cada entidad tenga metadatos de seguimiento completos. La bandera IsDeleted tiene como valor
+          predeterminado false y nunca se elimina físicamente de la base de datos.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Migrations/20250819140708_Init-Create.Designer.cs (22-101) • SSO.DataModel/Context/MainDbContext.cs
+          (104-130)
+        </div>
+
+        <h2>Intercepción de SaveChanges</h2>
+        <p>
+          La clase MainDbContext sobrescribe tanto <code>SaveChanges()</code> como <code>SaveChangesAsync()</code> para
+          interceptar operaciones de persistencia e inyectar metadatos de auditoría antes de escribir en la base de
+          datos.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Context/MainDbContext.cs (86-130)
+        </div>
+
+        <h3>Implementación de SaveChanges</h3>
+        <p>El método <code>MainDbContext.SaveChanges()</code> es directo:</p>
+        <pre><code class="language-csharp">public override int SaveChanges()
+{
+    this.AuditEntities();
+    return base.SaveChanges();
+}</code></pre>
+        <span class="text-xs text-text-secondary mb-4 block">SSO.DataModel/Context/MainDbContext.cs (86-91)</span>
+
+        <p>La versión asíncrona sigue el mismo patrón:</p>
+        <pre><code class="language-csharp">public override Task&lt;int&gt; SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
+{
+    this.AuditEntities();
+    return base.SaveChangesAsync(cancellationToken);
+}</code></pre>
+        <span class="text-xs text-text-secondary mb-4 block">SSO.DataModel/Context/MainDbContext.cs (97-101)</span>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Context/MainDbContext.cs (86-101)
+        </div>
+
+        <h3>Método AuditEntities</h3>
+        <p>
+          El método privado <code>AuditEntities()</code> realiza el poblamiento real de los campos de auditoría iterando
+          sobre el ChangeTracker de Entity Framework:
+        </p>
+
+        <h4>Lógica Principal</h4>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>Recupera la marca de tiempo actual: <code>DateTime now = DateTime.Now;</code></li>
+          <li>Consulta el ChangeTracker: <code>ChangeTracker.Entries&lt;EntityAuditableBase&gt;()</code></li>
+          <li>Ramifica según EntityState:
+            <ul class="list-disc pl-6 mt-1">
+              <li><strong>EntityState.Added:</strong> Puebla CreatedBy, RegistrationDate e IsActive</li>
+              <li><strong>EntityState.Modified:</strong> Puebla UpdateBy y ModificationDate, luego previene que
+                RegistrationDate y CreatedBy sean sobrescritos</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h4>Referencia de Código</h4>
+        <pre><code class="language-csharp">private void AuditEntities()
+{
+    DateTime now = DateTime.Now;
+
+    foreach (EntityEntry&lt;EntityAuditableBase&gt; entry in ChangeTracker.Entries&lt;EntityAuditableBase&gt;())
+    {
+        if (entry.State == EntityState.Added)
+        {
+            entry.Entity.CreatedBy = 1;
+            var entidad = entry.Entity.ToString().Replace("RUDT.DataModel.Entities.", "");
+            entry.Entity.RegistrationDate = now;
+            entry.Entity.IsActive = EntityEstatus.Activo;
+        }
+        else if (entry.State == EntityState.Modified)
+        {
+            entry.Entity.UpdateBy = 1;
+            entry.Entity.ModificationDate = now;
+            Entry(entry.Entity).Property(x => x.RegistrationDate).IsModified = false;
+            Entry(entry.Entity).Property(x => x.CreatedBy).IsModified = false;
+        }
+    }
+}</code></pre>
+        <span class="text-xs text-text-secondary mb-4 block">SSO.DataModel/Context/MainDbContext.cs (104-130)</span>
+
+        <p>
+          <strong>Nota:</strong> Los valores codificados CreatedBy = 1 y UpdateBy = 1 representan un usuario del
+          sistema. En una implementación de producción, estos se derivarían del contexto del usuario autenticado.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Context/MainDbContext.cs (104-130)
+        </div>
+
+        <h2>Implementación de Eliminación Lógica</h2>
+        <p>
+          La funcionalidad de eliminación lógica asegura que las entidades nunca sean eliminadas físicamente de la base
+          de datos, preservando rastros de auditoría y habilitando una posible recuperación.
+        </p>
+
+        <h3>Eliminación Lógica a Nivel de Repositorio</h3>
+        <p>La clase <code>BaseRepository&lt;T&gt;</code> implementa dos métodos de eliminación lógica:</p>
+
+        <h4>DeleteByIdAsync</h4>
+        <p>Encuentra la entidad por ID, establece IsDeleted = true (mediante reflexión para acceder a la propiedad
+          Borrado), y confirma el cambio:</p>
+        <pre><code class="language-csharp">public async Task&lt;bool&gt; DeleteByIdAsync(int id)
+{
+    var entity = await _dbSet.FindAsync(id);
+    var type = entity.GetType();
+    var prop = type.GetProperty("Borrado");
+    prop?.SetValue(entity, true);
+    return await CommitAsync();
+}</code></pre>
+        <span class="text-xs text-text-secondary mb-4 block">SSO.BusinessLayer/Repositories/Base/BaseRepository.cs
+          (97-104)</span>
+
+        <h4>DeleteByEntity</h4>
+        <p>Similar a DeleteByIdAsync pero opera sobre una instancia de entidad existente:</p>
+        <pre><code class="language-csharp">public void DeleteByEntity(TModel entity)
+{
+    var type = entity.GetType();
+    var prop = type.GetProperty("Borrado");
+    prop?.SetValue(entity, true);
+}</code></pre>
+        <span class="text-xs text-text-secondary mb-4 block">SSO.BusinessLayer/Repositories/Base/BaseRepository.cs
+          (106-111)</span>
+
+        <h4>Remove</h4>
+        <p>El método Remove proporciona una eliminación lógica validada que retorna un OperationResult:</p>
+        <pre><code class="language-csharp">public virtual OperationResult Remove(TModel entity)
+{
+    EntityEntry dbEntityEntry = _context.Entry(entity);
+    entity.IsDeleted = true;
+    dbEntityEntry.State = EntityState.Modified;
+    return new OperationResult() { StatusCode = HttpStatusCode.OK, Success = true };
+}</code></pre>
+        <span class="text-xs text-text-secondary mb-4 block">SSO.BusinessLayer/Repositories/Base/BaseRepository.cs
+          (206-212)</span>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (97-111) •
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (206-212)
+        </div>
+
+        <h2>Filtros de Consulta Globales</h2>
+        <p>
+          Para prevenir que las entidades eliminadas lógicamente aparezcan en los resultados de las consultas, el método
+          <code>MainDbContext.OnModelCreating</code> aplica un filtro de consulta global a todas las entidades que
+          implementan <code>IEntityBase</code>:
+        </p>
+        <pre><code class="language-csharp">protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    base.OnModelCreating(modelBuilder);
+
+    modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+    // Aplicar filtro de eliminación lógica a todas las entidades IEntityBase
+    foreach (var type in modelBuilder.Model.GetEntityTypes()
+                        .Where(type => typeof(IEntityBase).IsAssignableFrom(type.ClrType)))
+    {
+        modelBuilder.SetSoftDeleteFilter(type.ClrType);
+    }
+}</code></pre>
+        <span class="text-xs text-text-secondary mb-4 block">SSO.DataModel/Context/MainDbContext.cs (24-42)</span>
+
+        <h3>Extensión SetSoftDeleteFilter</h3>
+        <p>
+          El método de extensión <code>SetSoftDeleteFilter</code> (definido en SSO.Core.Extensions) crea una expresión
+          lambda <code>e => !e.IsDeleted</code> y la aplica como filtro de consulta. Esto asegura que:
+        </p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Todas las consultas excluyen automáticamente entidades eliminadas lógicamente</li>
+          <li>Los desarrolladores no necesitan agregar manualmente cláusulas <code>.Where(x => !x.IsDeleted)</code></li>
+          <li>Las entidades eliminadas lógicamente son invisibles a menos que se consulten explícitamente con
+            <code>IgnoreQueryFilters()</code></li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Context/MainDbContext.cs (24-42)
+        </div>
+
+        <h2>Flujo del Ciclo de Vida de una Entidad</h2>
+        <p>El siguiente diagrama ilustra cómo se pueblan los campos de auditoría a lo largo del ciclo de vida de una
+          entidad:</p>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo del Ciclo de Vida de una Entidad]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Context/MainDbContext.cs (104-130) • SSO.BusinessLayer/Repositories/Base/BaseRepository.cs
+          (206-212)
+        </div>
+
+        <h2>Ejemplos de Campos de Auditoría del Esquema</h2>
+
+        <h3>Entidad Application</h3>
+        <p>La entidad Application en el esquema Core demuestra la configuración estándar de campos de auditoría:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Columna</th>
+              <th>Tipo</th>
+              <th>Anulable</th>
+              <th>Predeterminado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ApplicationId</td>
+              <td>int</td>
+              <td>No</td>
+              <td>IDENTITY</td>
+            </tr>
+            <tr>
+              <td>Name</td>
+              <td>nvarchar(100)</td>
+              <td>No</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>RegistrationDate</td>
+              <td>datetimeoffset</td>
+              <td>No</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>ModificationDate</td>
+              <td>datetimeoffset</td>
+              <td>Sí</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>CreatedBy</td>
+              <td>int</td>
+              <td>No</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>UpdateBy</td>
+              <td>int</td>
+              <td>No</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>IsActive</td>
+              <td>bit</td>
+              <td>No</td>
+              <td>true</td>
+            </tr>
+            <tr>
+              <td>IsDeleted</td>
+              <td>bit</td>
+              <td>No</td>
+              <td>false</td>
+            </tr>
+          </tbody>
+        </table>
+        <span class="text-xs text-text-secondary mb-4 block">SSO.Api/Migrations/20250819140708_Init-Create.Designer.cs
+          (24-101)</span>
+
+        <h3>Entidad ApplicationModule</h3>
+        <p>De manera similar, ApplicationModule incluye todos los campos de auditoría con el mismo patrón:</p>
+        <span class="text-xs text-text-secondary mb-4 block">SSO.Api/Migrations/20250819140708_Init-Create.Designer.cs
+          (178-245)</span>
+
+        <p>
+          <strong>Consistencia del Patrón:</strong> Cada entidad en los esquemas Core y General sigue esta estructura
+          idéntica de campos de auditoría, asegurando un seguimiento uniforme a través de todo el modelo de datos.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Migrations/20250819140708_Init-Create.Designer.cs (24-245)
+        </div>
+
+        <h2>Detalles Clave de Implementación</h2>
+
+        <h3>IDs de Usuario Codificados</h3>
+        <p>La implementación actual usa IDs de usuario codificados (CreatedBy = 1, UpdateBy = 1). Esta es una
+          simplificación que debería reemplazarse con:</p>
+        <pre><code class="language-csharp">// Implementación recomendada
+entry.Entity.CreatedBy = _httpContextAccessor.HttpContext?.User?.GetUserId() ?? 1;</code></pre>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Context/MainDbContext.cs (116-124)
+        </div>
+
+        <h3>Precisión de Marca de Tiempo</h3>
+        <p>
+          Los campos <code>RegistrationDate</code> y <code>ModificationDate</code> usan <code>DateTimeOffset</code> para
+          preservar información de zona horaria, asegurando marcas de tiempo consistentes a través de implementaciones
+          distribuidas.
+        </p>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Migrations/20250819140708_Init-Create.cs (31-32)
+        </div>
+
+        <h3>Prevención de Sobrescritura de Campos de Auditoría</h3>
+        <p>
+          El método <code>AuditEntities</code> marca explícitamente <code>RegistrationDate</code> y
+          <code>CreatedBy</code> como <code>IsModified = false</code> durante actualizaciones para prevenir
+          modificaciones accidentales:
+        </p>
+        <pre><code class="language-csharp">Entry(entry.Entity).Property(x => x.RegistrationDate).IsModified = false;
+Entry(entry.Entity).Property(x => x.CreatedBy).IsModified = false;</code></pre>
+        <span class="text-xs text-text-secondary mb-4 block">SSO.DataModel/Context/MainDbContext.cs (126-127)</span>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Context/MainDbContext.cs (126-127)
+        </div>
+
+        <h2>Comportamiento del Filtro de Consulta</h2>
+
+        <h3>Filtrado Automático</h3>
+        <p>Con el filtro de consulta global aplicado, las siguientes consultas excluyen automáticamente registros
+          eliminados lógicamente:</p>
+        <pre><code class="language-csharp">// Esta consulta excluye IsDeleted = true
+var activeApplications = await _context.Applications.ToListAsync();
+
+// Esta consulta también excluye IsDeleted = true
+var activeUsers = await _dbSet.Where(u => u.Username == "admin").FirstOrDefaultAsync();</code></pre>
+
+        <h3>Omitir el Filtro</h3>
+        <p>Para consultar explícitamente entidades eliminadas lógicamente, usar <code>IgnoreQueryFilters()</code>:</p>
+        <pre><code class="language-csharp">// Esta consulta incluye IsDeleted = true
+var allApplications = await _context.Applications
+    .IgnoreQueryFilters()
+    .ToListAsync();</code></pre>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Context/MainDbContext.cs (33-41)
+        </div>
+
+        <h2>Integración con el Patrón Repositorio</h2>
+        <p>El sistema de auditoría se integra perfectamente con la implementación de
+          <code>BaseRepository&lt;T&gt;</code>:</p>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Integración de Auditoría con Repositorio]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (18-33) • SSO.DataModel/Context/MainDbContext.cs
+          (86-130)
+        </div>
+
+        <h2>Resumen</h2>
+        <p>El sistema de Auditoría de Entidades proporciona:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Poblamiento transparente de campos de auditoría a través de intercepción de SaveChanges</li>
+          <li>Funcionalidad de eliminación lógica que preserva el historial de datos</li>
+          <li>Filtros de consulta globales que excluyen automáticamente entidades eliminadas lógicamente</li>
+          <li>Protección de metadatos de creación previniendo que RegistrationDate y CreatedBy sean modificados</li>
+          <li>Esquema de auditoría consistente a través de todas las entidades que implementan IEntityBase</li>
+        </ul>
+        <p>
+          Esta infraestructura habilita el seguimiento completo de eventos del ciclo de vida de entidades sin requerir
+          intervención explícita del desarrollador, asegurando integridad de datos y auditabilidad a través del sistema
+          SSO.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.DataModel/Context/MainDbContext.cs (1-133) • SSO.BusinessLayer/Repositories/Base/BaseRepository.cs (1-505)
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

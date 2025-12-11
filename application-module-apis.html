@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Application & Module APIs - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">API Controllers</div>
+
+      <h1>APIs de Aplicaciones y Módulos</h1>
+
+      <section class="prose prose-invert max-w-none">
+
+        <h2>Propósito y Alcance</h2>
+        <p>
+          Esta página documenta los endpoints de la API REST expuestos por <code>ApplicationController</code>,
+          <code>ApplicationModuleController</code> y <code>ApplicationModuleAccessController</code> para gestionar
+          aplicaciones, sus jerarquías de módulos y permisos de control de acceso. Estas APIs permiten a las
+          aplicaciones cliente recuperar menús de navegación específicos del usuario, consultar permisos a nivel de
+          módulo y configurar estructuras de aplicación.
+        </p>
+        <p>
+          Para endpoints de autenticación de usuarios, consulte <a href="user-management-apis.html"
+            class="text-accent hover:underline">APIs de Gestión de Usuarios</a>. Para flujos de trabajo de solicitudes
+          de acceso, consulte <a href="access-request-apis.html" class="text-accent hover:underline">APIs de Solicitudes
+            de Acceso</a>. Para modelos de permisos de nivel inferior, consulte <a href="permission-system.html"
+            class="text-accent hover:underline">Sistema de Permisos</a>.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Core/ApplicationController.cs (1-149) •
+          SSO.Api/Controllers/Core/ApplicationModuleController.cs (1-16) •
+          SSO.Api/Controllers/Core/ApplicationModuleAccessController.cs (1-19)
+        </div>
+
+        <h2>Resumen de Endpoints de la API</h2>
+        <p>La siguiente tabla resume los principales endpoints expuestos por los controladores de gestión de
+          aplicaciones:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Método HTTP</th>
+              <th>Endpoint</th>
+              <th>Controlador</th>
+              <th>Propósito</th>
+              <th>Autenticación Requerida</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GET</td>
+              <td>/api/Application/GetMenuByUser</td>
+              <td>ApplicationController</td>
+              <td>Recuperar estructura de menú jerárquica para el usuario autenticado</td>
+              <td>Sí (JWT)</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td>/api/Application/GetPermissionsByModuleId/{moduloId}</td>
+              <td>ApplicationController</td>
+              <td>Consultar permisos del usuario para un módulo específico</td>
+              <td>Sí (JWT)</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td>/api/Application</td>
+              <td>ApplicationController</td>
+              <td>Crear nueva aplicación con módulos anidados</td>
+              <td>Sí</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td>/api/ApplicationModule</td>
+              <td>ApplicationModuleController</td>
+              <td>Recuperar todos los módulos de aplicación (paginados)</td>
+              <td>Sí</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td>/api/ApplicationModule/{id}</td>
+              <td>ApplicationModuleController</td>
+              <td>Recuperar un solo módulo por ID</td>
+              <td>Sí</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td>/api/ApplicationModule</td>
+              <td>ApplicationModuleController</td>
+              <td>Crear nuevo módulo</td>
+              <td>Sí</td>
+            </tr>
+            <tr>
+              <td>PUT</td>
+              <td>/api/ApplicationModule/{id}</td>
+              <td>ApplicationModuleController</td>
+              <td>Actualizar módulo existente</td>
+              <td>Sí</td>
+            </tr>
+            <tr>
+              <td>DELETE</td>
+              <td>/api/ApplicationModule/{id}</td>
+              <td>ApplicationModuleController</td>
+              <td>Eliminación lógica de módulo (establece IsDeleted=true)</td>
+              <td>Sí</td>
+            </tr>
+            <tr>
+              <td>GET/POST/PUT/DELETE</td>
+              <td>/api/ApplicationModuleAccess/*</td>
+              <td>ApplicationModuleAccessController</td>
+              <td>Operaciones CRUD para asignaciones de permisos</td>
+              <td>Sí</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Core/ApplicationController.cs (32-147) •
+          SSO.Api/Controllers/Core/ApplicationModuleController.cs (9-15) •
+          SSO.Api/Controllers/Core/ApplicationModuleAccessController.cs (12-18)
+        </div>
+
+        <h2>ApplicationController: Recuperación de Menú</h2>
+
+        <h3>GET /api/Application/GetMenuByUser</h3>
+        <p>
+          Devuelve la estructura de menú de módulos jerárquica para el usuario autenticado, filtrada por sus permisos.
+          La respuesta incluye solo los módulos a los que el usuario tiene acceso, organizados en relaciones padre-hijo.
+        </p>
+
+        <h4>Solicitud</h4>
+        <pre><code class="language-http">GET /api/Application/GetMenuByUser
+Authorization: Bearer {jwt_token}</code></pre>
+        <p>El endpoint extrae UserId y ApplicationId del token JWT a través de
+          <code>IAuthService.GetAuthUser(Request)</code>.</p>
+
+        <h4>Formato de Respuesta</h4>
+        <pre><code class="language-json">[
+  {
+    "id": 1,
+    "applicationId": 1002,
+    "title": "Dashboard",
+    "path": "/dashboard",
+    "icon": "fas fa-home",
+    "order": 1,
+    "isExternalLink": false,
+    "submenu": []
+  },
+  {
+    "id": 2,
+    "title": "POA",
+    "icon": "fas fa-tasks",
+    "order": 5,
+    "submenu": [
+      {
+        "id": 21,
+        "parentModuleId": 2,
+        "title": "Formulación Productos",
+        "path": "/poa/formulacion",
+        "order": 1,
+        "submenu": []
+      }
+    ]
+  }
+]</code></pre>
+
+        <h4>Detalles de Implementación</h4>
+        <p>El método de la capa de servicio <code>ApplicationService.GetModulesByUsuarioId(userId, appId)</code>
+          implementa dos rutas de ejecución:</p>
+
+        <p><strong>Ruta de Usuario ROOT (SSO.BusinessLayer/Services/Core/ApplicationService.cs 34-59):</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Si <code>user.IsRoot == true</code>, devuelve TODOS los módulos para la aplicación sin filtrado</li>
+          <li>La consulta incluye:
+            <code>_context.ApplicationsModules.Include(x => x.Submenu.OrderBy(o => o.Order)).Where(x => x.ApplicationId == appId && x.ParentModuleId == null)</code>
+          </li>
+          <li>Otorga automáticamente acceso a toda la jerarquía de módulos</li>
+        </ul>
+
+        <p><strong>Ruta de Usuario Regular (SSO.BusinessLayer/Services/Core/ApplicationService.cs 61-96):</strong></p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>Recupera las membresías de grupo del usuario a través de <code>user.UsersGroups</code></li>
+          <li>Consulta <code>ApplicationsModulesAccesses</code> para permisos donde
+            <code>(UserId == userId OR GroupId IN user.Groups) AND PermissionValue > 0</code></li>
+          <li>Determina los módulos padre a mostrar (si el usuario tiene acceso al hijo, el padre debe ser visible)</li>
+          <li>Filtra elementos de submenú basándose en el array <code>allowModulesIds</code></li>
+          <li>Excluye módulos sin hijos accesibles y sin ruta directa
+            (<code>x.Submenu.Count > 0 || x.Path != null</code>)</li>
+        </ol>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo de Solicitud de Recuperación de Menú]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Core/ApplicationController.cs (32-58) •
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (27-96)
+        </div>
+
+        <h2>ApplicationController: Consultas de Permisos</h2>
+
+        <h3>GET /api/Application/GetPermissionsByModuleId/{moduloId}</h3>
+        <p>
+          Devuelve el conjunto de permisos agregados para un módulo específico, resolviendo tanto los permisos directos
+          del usuario como los permisos basados en grupos utilizando operaciones bitwise.
+        </p>
+
+        <h4>Solicitud</h4>
+        <pre><code class="language-http">GET /api/Application/GetPermissionsByModuleId/42
+Authorization: Bearer {jwt_token}</code></pre>
+
+        <h4>Formato de Respuesta</h4>
+        <pre><code class="language-json">{
+  "moduloId": 42,
+  "acciones": ["READ", "WRITE", "MANAGE"]
+}</code></pre>
+        <p>
+          El array <code>acciones</code> contiene identificadores de permisos que el usuario tiene para el módulo
+          especificado. Los valores posibles incluyen:
+        </p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>READ (PermissionValue = 1)</li>
+          <li>WRITE (PermissionValue = 2)</li>
+          <li>ADMIN (PermissionValue = 4)</li>
+          <li>MANAGE (PermissionValue = 8)</li>
+        </ul>
+
+        <h4>Lógica de Agregación de Permisos</h4>
+        <p>La implementación en <code>SSO.BusinessLayer/Services/Core/ApplicationService.cs</code> (97-131) sigue estos
+          pasos:</p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>Recuperar Grupos de Usuario: <code>user.UsersGroups.Select(s => (int?)s.GroupId).ToArray()</code></li>
+          <li>Consultar Permisos: Obtener todos los registros de <code>ApplicationModuleAccess</code> donde
+            <code>(UserId == userId OR GroupId IN groups) AND ApplicationModuleId == moduleId</code></li>
+          <li>Sumar Valores de Permisos: <code>permission.Sum(s => s.PermissionValue)</code> agrega valores bitwise</li>
+          <li>Anulación de Usuario ROOT: Si <code>user.IsRoot == true</code>, establecer
+            <code>permissionValue = managePermission.Value</code> (otorga todos los permisos)</li>
+          <li>Filtro Bitwise: Consultar tabla <code>Permissions</code> donde
+            <code>(permissionValue & p.Value) != 0</code> para extraer permisos activos</li>
+        </ol>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Algoritmo de Resolución de Permisos]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (97-131)
+        </div>
+
+        <h2>ApplicationController: Recuperación Masiva de Permisos</h2>
+
+        <h3>Endpoints Extendidos de Permisos</h3>
+        <p>El controlador expone dos métodos adicionales para recuperar permisos a través de múltiples módulos:</p>
+
+        <h4>GetPermissionsByAppIdUserIdAsync</h4>
+        <p><strong>Endpoint:</strong> No expuesto directamente (llamado internamente)</p>
+        <p><strong>Firma del Método:</strong>
+          <code>Task&lt;ICollection&lt;PermissionResponseDto&gt;&gt; GetPermissionsByAppIdUserIdAsync(int usuarioId, int appId)</code>
+        </p>
+        <p>
+          Devuelve conjuntos de permisos para TODOS los módulos en una aplicación. La respuesta incluye:
+        </p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>ModuloId: Identificador del módulo</li>
+          <li>ModuleName: Título del módulo</li>
+          <li>ModuleIcon: Nombre de la clase del icono</li>
+          <li>Acciones: Array de identificadores de permisos</li>
+        </ul>
+        <p>
+          La implementación itera a través de todos los módulos en la aplicación y aplica la misma lógica de resolución
+          de permisos que <code>GetPermissionsByModuleId</code>. Solo se devuelven módulos con Acciones.Count > 0.
+        </p>
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (133-178)
+        </div>
+
+        <h4>GetPermissionsByUserIdAndAppIdAsync</h4>
+        <p><strong>Firma del Método:</strong>
+          <code>Task&lt;ICollection&lt;UserModulePermissionsDto&gt;&gt; GetPermissionsByUserIdAndAppIdAsync(int usuarioId, int appId)</code>
+        </p>
+        <p>Similar al anterior, pero devuelve detalles de permisos más completos:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>ModuleId: Identificador del módulo</li>
+          <li>ModuleName: Título del módulo</li>
+          <li>Permissions: Array de objetos PermissionDto (incluye Id, Identifier, Value, etc.)</li>
+        </ul>
+        <p>Esta variante utiliza AutoMapper para transformar entidades Permission en DTOs, proporcionando metadatos
+          completos de permisos en lugar de solo identificadores.</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (180-224)
+        </div>
+
+        <h2>ApplicationController: Creación de Aplicación</h2>
+
+        <h3>POST /api/Application</h3>
+        <p>
+          Crea una nueva aplicación con jerarquías de módulos anidados. El endpoint anula el método base Post para
+          manejar la relación compleja entre las entidades Application y ApplicationModule.
+        </p>
+
+        <h4>Formato de Solicitud</h4>
+        <pre><code class="language-json">{
+  "name": "SISPLAN",
+  "secret": "abc123...",
+  "callbackUrl": "https://app.example.com/callback",
+  "passwordClient": true,
+  "applicationsModules": [
+    {
+      "title": "Dashboard",
+      "path": "/dashboard",
+      "icon": "fas fa-home",
+      "order": 1,
+      "submenu": []
+    },
+    {
+      "title": "POA",
+      "icon": "fas fa-tasks",
+      "order": 2,
+      "submenu": [
+        {
+          "title": "Formulación",
+          "path": "/poa/formulacion",
+          "order": 1,
+          "submenu": []
+        }
+      ]
+    }
+  ]
+}</code></pre>
+
+        <h4>Flujo de Implementación</h4>
+        <p>El método en <code>SSO.Api/Controllers/Core/ApplicationController.cs</code> (88-146) sigue esta secuencia:
+        </p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>Validar Solicitud: Verificar <code>dto != null</code></li>
+          <li>Mapear DTO: Convertir ApplicationDto a entidad Application, estableciendo
+            <code>ApplicationsModules = null</code> para prevenir problemas de seguimiento de EF Core</li>
+          <li>Guardar Aplicación: Llamar <code>_db.Add(model)</code> y <code>_db.SaveAsync()</code></li>
+          <li>Iterar Módulos: Para cada módulo en <code>dto.ApplicationsModules</code>:
+            <ul class="list-disc pl-6 mt-1">
+              <li>Establecer <code>item.ApplicationId = model.Id</code> (vinculación de clave foránea)</li>
+              <li>Manejar submenú anidado: Establecer <code>subItem.ParentModuleId = 0</code> y
+                <code>subItem.ApplicationId = model.Id</code></li>
+              <li>Llamar <code>_applicationModuleService.AddAsync(_mapper.Map&lt;ApplicationModule&gt;(item))</code>
+              </li>
+            </ul>
+          </li>
+          <li>Guardar Módulos: Llamar <code>_applicationModuleService.SaveAsync()</code></li>
+          <li>Devolver Respuesta: Envolver resultado en <code>OperationResult&lt;ApplicationDto&gt;</code> con
+            StatusCode = HttpStatusCode.Created</li>
+        </ol>
+        <p>
+          <strong>Nota:</strong> El código comentado en <code>SSO.Api/Controllers/Core/ApplicationController.cs</code>
+          (124-126) sugiere una implementación anterior usando AddRange, reemplazada por llamadas individuales a
+          AddAsync.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Core/ApplicationController.cs (88-146)
+        </div>
+
+        <h2>ApplicationModuleController: Operaciones CRUD</h2>
+        <p>
+          El <code>ApplicationModuleController</code> extiende
+          <code>BaseController&lt;ApplicationModule, ApplicationModuleDto&gt;</code>, heredando operaciones CRUD
+          estándar sin lógica personalizada. Toda la funcionalidad proviene del controlador base genérico.
+        </p>
+
+        <h3>Endpoints Heredados</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Método HTTP</th>
+              <th>Endpoint</th>
+              <th>Heredado De</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GET</td>
+              <td>/api/ApplicationModule</td>
+              <td>BaseController.Get()</td>
+              <td>Recuperar lista paginada con soporte de consulta/filtro</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td>/api/ApplicationModule/{id}</td>
+              <td>BaseController.GetById()</td>
+              <td>Recuperar entidad única por ID</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td>/api/ApplicationModule</td>
+              <td>BaseController.Post()</td>
+              <td>Crear nuevo módulo</td>
+            </tr>
+            <tr>
+              <td>PUT</td>
+              <td>/api/ApplicationModule/{id}</td>
+              <td>BaseController.Put()</td>
+              <td>Actualizar módulo existente</td>
+            </tr>
+            <tr>
+              <td>DELETE</td>
+              <td>/api/ApplicationModule/{id}</td>
+              <td>BaseController.Delete()</td>
+              <td>Eliminación lógica de módulo (IsDeleted=true)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          La capa de servicio <code>ApplicationModuleService</code> también sigue el patrón de repositorio base,
+          extendiendo <code>BaseRepository&lt;ApplicationModule&gt;</code> sin métodos adicionales.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Core/ApplicationModuleController.cs (9-15) •
+          SSO.BusinessLayer/Services/Core/ApplicationModuleService.cs (10-16)
+        </div>
+
+        <h2>ApplicationModuleAccessController: Asignación de Permisos</h2>
+        <p>
+          El <code>ApplicationModuleAccessController</code> gestiona la relación muchos-a-muchos entre usuarios/grupos y
+          módulos a través de la entidad <code>ApplicationModuleAccess</code>. Al igual que ApplicationModuleController,
+          hereda toda la funcionalidad de BaseController.
+        </p>
+
+        <h3>Estructura de Entidad</h3>
+        <p>Cada registro <code>ApplicationModuleAccess</code> contiene:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>UserId (nullable):</strong> Asignación directa de usuario</li>
+          <li><strong>GroupId (nullable):</strong> Asignación basada en grupo</li>
+          <li><strong>ApplicationModuleId:</strong> Módulo objetivo</li>
+          <li><strong>PermissionValue:</strong> Banderas de permisos bitwise (1=READ, 2=WRITE, 4=ADMIN, 8=MANAGE)</li>
+        </ul>
+        <p>
+          <strong>Reglas de Negocio:</strong>
+        </p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Exactamente uno de UserId o GroupId debe estar establecido (relación XOR)</li>
+          <li>PermissionValue = 0 efectivamente revoca el acceso (filtrado por consultas)</li>
+        </ul>
+
+        <h3>Patrón de Uso Típico</h3>
+
+        <h4>Otorgar Acceso de Usuario:</h4>
+        <pre><code class="language-http">POST /api/ApplicationModuleAccess
+Content-Type: application/json
+
+{
+  "userId": 123,
+  "groupId": null,
+  "applicationModuleId": 42,
+  "permissionValue": 3
+}</code></pre>
+        <p>Esto otorga permisos READ (1) + WRITE (2) = 3 al usuario 123 para el módulo 42.</p>
+
+        <h4>Otorgar Acceso de Grupo:</h4>
+        <pre><code class="language-http">POST /api/ApplicationModuleAccess
+
+{
+  "userId": null,
+  "groupId": 1004,
+  "applicationModuleId": 42,
+  "permissionValue": 1
+}</code></pre>
+        <p>Esto otorga permisos READ a todos los miembros del grupo 1004 para el módulo 42.</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Core/ApplicationModuleAccessController.cs (12-18) •
+          SSO.BusinessLayer/Services/Core/ApplicationModuleAccessService.cs (10-16)
+        </div>
+
+        <h2>Flujo de Procesamiento de Solicitudes</h2>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Procesamiento de Solicitudes de Extremo a Extremo]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Core/ApplicationController.cs (32-86) •
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (27-131)
+        </div>
+
+        <h2>Jerarquía de Módulos y Filtrado</h2>
+        <p>
+          El sistema aplica reglas de visibilidad padre-hijo al construir menús para usuarios regulares. El algoritmo en
+          <code>SSO.BusinessLayer/Services/Core/ApplicationService.cs</code> (63-93) implementa esta lógica:
+        </p>
+
+        <h3>Regla de Visibilidad de Módulo Padre</h3>
+        <pre><code class="language-csharp">// Línea 66: Determinar módulos padre
+var modulesIds = _context.ApplicationsModulesAccesses
+    .Include(x => x.ApplicationModule)
+    .Where(x => (x.UserId == userId || groupArray.Contains(x.GroupId)) 
+        && x.ApplicationModule.ApplicationId == appId 
+        && x.PermissionValue > 0)
+    .Select(s => s.ApplicationModule.ParentModuleId == null 
+        ? s.ApplicationModuleId 
+        : s.ApplicationModule.ParentModuleId)
+    .Distinct().ToArray();</code></pre>
+        <p>
+          <strong>Lógica:</strong> Si un usuario tiene acceso a un módulo hijo (elemento de submenú), la consulta
+          devuelve el ParentModuleId en lugar del ID del hijo. Esto asegura que los módulos padre aparezcan en la
+          navegación incluso si el usuario carece de permiso directo al padre mismo.
+        </p>
+
+        <h3>Filtrado de Módulos Hijos</h3>
+        <pre><code class="language-csharp">// Línea 92: Filtrar submenú por IDs permitidos
+Submenu = x.Submenu.Where(i => allowModulesIds.Contains(i.Id))
+    .OrderBy(x => x.Order).ToList()</code></pre>
+        <p>
+          <strong>Lógica:</strong> El array <code>allowModulesIds</code> contiene todos los IDs de módulos donde
+          PermissionValue > 0. Los elementos de submenú se filtran para incluir solo aquellos explícitamente otorgados
+          al usuario/grupos.
+        </p>
+
+        <h3>Exclusión de Padres Vacíos</h3>
+        <pre><code class="language-csharp">// Línea 93: Excluir padres vacíos sin rutas directas
+.Where(x => x.Submenu.Count > 0 || x.Path != null)</code></pre>
+        <p>
+          <strong>Lógica:</strong> Los módulos padre sin hijos accesibles Y sin propiedad Path directa se excluyen del
+          resultado final. Esto previene mostrar secciones de menú vacías.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Core/ApplicationService.cs (63-93)
+        </div>
+
+        <h2>Manejo de Errores y Validación</h2>
+        <p>Todos los controladores siguen patrones consistentes de manejo de errores:</p>
+
+        <h3>Fallos de Autenticación</h3>
+        <pre><code class="language-csharp">// ApplicationController.cs:43-44
+if (userId <= 0)
+    return NotFound(new { Message = "El token no es válido" });</code></pre>
+        <p>Los tokens JWT inválidos o faltantes devuelven 404 Not Found con un mensaje indicando invalidez del token.
+        </p>
+
+        <h3>Fallos de Validación</h3>
+        <pre><code class="language-csharp">// ApplicationController.cs:65-66
+if (moduloId <= 0)
+    return BadRequest(new { Message = "El ModuloId es requerido" });</code></pre>
+        <p>Los parámetros de solicitud faltantes o inválidos devuelven 400 Bad Request.</p>
+
+        <h3>Errores de Capa de Servicio</h3>
+        <pre><code class="language-csharp">// ApplicationController.cs:53-56
+catch (Exception ex)
+{
+    return StatusCode(500, new { Message = "Error inesperado", exception = ex });
+}</code></pre>
+        <p>Las excepciones no manejadas devuelven 500 Internal Server Error con detalles de la excepción.</p>
+
+        <h3>Errores de Capa de Repositorio</h3>
+        <p>La capa BaseRepository (heredada por los servicios) utiliza el patrón OperationResult&lt;T&gt;:</p>
+        <pre><code class="language-csharp">// ApplicationController.cs:100-101
+if (!resultRepository.Success)
+    return Ok(Respuesta($"ERROR!: {resultRepository.Message}", true, resultRepository.StatusCode));</code></pre>
+        <p>Las operaciones de repositorio fallidas devuelven respuestas envueltas con Success=false, mensajes
+          descriptivos y códigos de estado HTTP apropiados.</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Core/ApplicationController.cs (43-145)
+        </div>
+
+        <h2>Integración con Capa de Servicio</h2>
+        <p>Los controladores delegan toda la lógica de negocio a las clases de servicio, manteniendo la separación de
+          responsabilidades:</p>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Arquitectura Controlador-Servicio-Repositorio]
+        </div>
+
+        <p><strong>Patrones de Diseño Clave:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>Inyección de Dependencias:</strong> Los controladores reciben instancias de servicio a través de
+            inyección por constructor</li>
+          <li><strong>Controlador Base Genérico:</strong> ApplicationModuleController y
+            ApplicationModuleAccessController extienden <code>BaseController&lt;TEntity, TDto&gt;</code>, heredando
+            operaciones CRUD</li>
+          <li><strong>Especialización de Capa de Servicio:</strong> ApplicationService agrega métodos específicos del
+            dominio (GetModulesByUsuarioId, consultas de permisos) más allá de la funcionalidad base del repositorio
+          </li>
+          <li><strong>Patrón Repositorio:</strong> Todos los servicios extienden <code>BaseRepository&lt;T&gt;</code> o
+            implementan <code>IEntityBaseRepository&lt;T&gt;</code>, abstrayendo el acceso a datos</li>
+        </ul>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

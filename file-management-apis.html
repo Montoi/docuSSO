@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File Management APIs - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">API Controllers</div>
+
+      <h1>APIs de Gestión de Archivos</h1>
+
+      <section class="prose prose-invert max-w-none">
+
+        <p>
+          El <code>FileController</code> expone endpoints REST para operaciones de carga, descarga y almacenamiento de
+          archivos. El sistema implementa un flujo de trabajo transaccional de gestión de archivos con validación,
+          almacenamiento estructurado y reversión automática en caso de fallo.
+        </p>
+        <p>
+          Esta página documenta los tres endpoints principales de la API y su implementación subyacente a través de
+          <code>FileDirectoryService</code> y <code>FileService</code>. Para la integración con flujos de trabajo de
+          solicitudes de acceso, ver página 5.3. Para detalles de la capa de datos, ver <a href="file-data-access.html"
+            class="text-accent hover:underline">página 4.4</a>.
+        </p>
+
+        <h2>Descripción General de Endpoints API</h2>
+        <p>
+          El <code>FileController</code> (SSO.Api/Controllers/Files/FileController.cs 14-74) expone tres endpoints HTTP:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método HTTP</th>
+              <th>Acción del Controlador</th>
+              <th>Parámetros de Entrada</th>
+              <th>Respuesta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>/api/File</td>
+              <td>POST</td>
+              <td>Upload()</td>
+              <td>IFormFile file, int documentTypeId</td>
+              <td>long (ID del archivo)</td>
+            </tr>
+            <tr>
+              <td>/api/File/UploadFileList</td>
+              <td>POST</td>
+              <td>UploadFileList()</td>
+              <td>List&lt;FileUploadDto&gt; fileList</td>
+              <td>Objeto Response</td>
+            </tr>
+            <tr>
+              <td>/api/File</td>
+              <td>GET</td>
+              <td>Download()</td>
+              <td>long id</td>
+              <td>File() con arreglo de bytes</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          El controlador depende de <code>FileDirectoryService</code> inyectado en el constructor
+          (SSO.Api/Controllers/Files/FileController.cs 16-21)
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Files/FileController.cs (14-74)
+        </div>
+
+        <h2>Flujo de Trabajo de Carga Individual de Archivo</h2>
+        <p><strong>Endpoint:</strong> <code>POST /api/File</code></p>
+        <p>
+          El método <code>Upload()</code> (SSO.Api/Controllers/Files/FileController.cs 23-34) acepta datos de formulario
+          multiparte con el archivo y el identificador de tipo de documento.
+        </p>
+
+        <h3>Flujo de Trabajo de Carga Individual - Cadena de Llamadas de Métodos</h3>
+        <p>
+          El flujo de trabajo implementa un proceso transaccional de cinco pasos definido en
+          <code>FileDirectoryService.UploadFile()</code> (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs
+          33-58):
+        </p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li><strong>Validar archivo</strong> - Verificar extensión, tamaño y nulidad
+            (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 37)</li>
+          <li><strong>Persistir metadatos</strong> - Crear registro <code>FileEntity</code>
+            (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 39)</li>
+          <li><strong>Construir DTO</strong> - Crear <code>FileCreateDto</code> con ID asignado
+            (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 40)</li>
+          <li><strong>Cargar a disco</strong> - Escribir en <code>{Year}/{FileTypeId}/{FileId}.ext</code>
+            (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 42)</li>
+          <li><strong>Actualizar ruta</strong> - Establecer <code>FileEntity.Path</code> en base de datos
+            (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 50)</li>
+        </ol>
+        <p>
+          Si el paso 4 falla, el sistema llama a <code>InactivateFile()</code>
+          (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 44-48) para marcar el registro de base de datos como
+          <code>IsDeleted = true</code>, preservando las pistas de auditoría.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Files/FileController.cs (23-34) • SSO.BusinessLayer/Services/Files/FileDirectoryService.cs
+          (33-58) • SSO.BusinessLayer/Services/Files/FileDirectoryService.cs (155-163) •
+          SSO.BusinessLayer/Services/Files/FileService.cs (24-48)
+        </div>
+
+        <h2>Flujo de Trabajo de Carga Masiva de Archivos</h2>
+        <p><strong>Endpoint:</strong> <code>POST /api/File/UploadFileList</code></p>
+        <p>
+          El método <code>UploadFileList()</code> (SSO.Api/Controllers/Files/FileController.cs 36-57) acepta un arreglo
+          JSON de archivos codificados en Base64. El sistema convierte cada <code>FileUploadDto</code> a
+          <code>IFormFile</code> antes del procesamiento.
+        </p>
+
+        <h3>Flujo de Procesamiento de Carga Masiva</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo de Carga Masiva]
+        </div>
+
+        <p>El flujo de trabajo está implementado en tres métodos de <code>FileDirectoryService</code>:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>Propósito</th>
+              <th>Líneas</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>UploadFileList()</td>
+              <td>Orquestación principal</td>
+              <td>SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 60-86</td>
+            </tr>
+            <tr>
+              <td>PrepareFileList()</td>
+              <td>Decodificación Base64 a FormFile</td>
+              <td>SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 88-114</td>
+            </tr>
+            <tr>
+              <td>ValidateFiles()</td>
+              <td>Validación secuencial</td>
+              <td>SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 116-131</td>
+            </tr>
+            <tr>
+              <td>SaveFileList()</td>
+              <td>Bucle de persistencia</td>
+              <td>SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 133-153</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          La clase <code>Response</code> (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 64-85) encapsula el
+          estado de éxito/fallo con propiedades Status, Message, MessageDetail y Object.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Files/FileController.cs (36-57) • SSO.BusinessLayer/Services/Files/FileDirectoryService.cs
+          (60-153)
+        </div>
+
+        <h2>Sistema de Validación de Archivos</h2>
+
+        <h3>Lógica de Validación en ValidateFile()</h3>
+        <p>
+          El método <code>ValidateFile()</code> (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 216-246) lanza
+          excepciones ante fallos de validación, deteniendo el proceso de carga antes de la persistencia en base de
+          datos.
+        </p>
+
+        <h3>Secuencia de Validación</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Secuencia de Validación]
+        </div>
+
+        <h3>Reglas de Validación</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Validación</th>
+              <th>Método</th>
+              <th>Configuración</th>
+              <th>Mensaje de Fallo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Verificación de nulidad</td>
+              <td>fileToCreate == null</td>
+              <td>N/A</td>
+              <td>"No ha enviado ningun archivo"</td>
+            </tr>
+            <tr>
+              <td>Extensión</td>
+              <td>_fileSettings.AllowedExtensions.Contains()</td>
+              <td>FileSettings.AllowedExtensions</td>
+              <td>"La extención del archivo no es permitida"</td>
+            </tr>
+            <tr>
+              <td>Tamaño</td>
+              <td>fileSizeResult.Entity > _fileSettings.MaxFileSize</td>
+              <td>FileSettings.MaxFileSize</td>
+              <td>"El tamaño del archivo supera el limite"</td>
+            </tr>
+            <tr>
+              <td>Búsqueda de tipo</td>
+              <td>FileTypeRepository.FindAsync()</td>
+              <td>Base de datos</td>
+              <td>"El tipo de documento es incorrecto"</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>El <code>IFileService</code> proporciona métodos auxiliares:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>GetFileExtension(IFormFile)</strong> (SSO.BusinessLayer/Services/Files/FileService.cs 68-79) -
+            Extrae extensión mediante Path.GetExtension()</li>
+          <li><strong>GetFileSize(IFormFile)</strong> (SSO.BusinessLayer/Services/Files/FileService.cs 94-99) - Retorna
+            tamaño en MB mediante file.Length / SizeTypes.MegaByte</li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Files/FileDirectoryService.cs (216-246) •
+          SSO.BusinessLayer/Services/Files/FileService.cs (68-99) • SSO.BusinessLayer/Interfaces/Files/IFileService.cs
+          (8-19)
+        </div>
+
+        <h2>Arquitectura de Almacenamiento de Archivos</h2>
+
+        <h3>Estructura de Ruta de Almacenamiento</h3>
+        <p>
+          El método <code>FileService.UploadFile()</code> (SSO.BusinessLayer/Services/Files/FileService.cs 24-48)
+          construye una ruta jerárquica usando <code>FileSettings</code>:
+        </p>
+        <pre><code class="language-text">{PrincipalPath}/{PrincipalFolderName}/{Year}/{FileTypeId}/{FileId}{.extension}</code></pre>
+        <p><strong>Ejemplo:</strong></p>
+        <pre><code class="language-text">/var/uploads/Files/2024/3/{1234}.pdf</code></pre>
+
+        <h3>Implementación de Almacenamiento - Dependencias de Clases</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Dependencias de Implementación]
+        </div>
+
+        <h3>Implementación de FileService.UploadFile()</h3>
+        <p>
+          El método (SSO.BusinessLayer/Services/Files/FileService.cs 24-48) construye rutas y escribe en disco:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Operación</th>
+              <th>Código</th>
+              <th>Líneas</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Extraer extensión</td>
+              <td>Path.GetExtension(file.Data.FileName)</td>
+              <td>28</td>
+            </tr>
+            <tr>
+              <td>Construir ruta principal</td>
+              <td>Path.Combine(_fileSettings.PrincipalPath, ...)</td>
+              <td>29</td>
+            </tr>
+            <tr>
+              <td>Construir carpeta de año</td>
+              <td>Path.Combine(principalFolderPath, DateTime.Now.Year.ToString())</td>
+              <td>30</td>
+            </tr>
+            <tr>
+              <td>Construir carpeta de tipo</td>
+              <td>Path.Combine(yearFolderPath, file.FileTypeId.ToString())</td>
+              <td>31</td>
+            </tr>
+            <tr>
+              <td>Generar nombre de archivo</td>
+              <td>$"{file.FileId}{extension}"</td>
+              <td>32</td>
+            </tr>
+            <tr>
+              <td>Crear directorios</td>
+              <td>CreateFolders(...)</td>
+              <td>35</td>
+            </tr>
+            <tr>
+              <td>Escribir archivo</td>
+              <td>file.Data.CopyToAsync(fileStream)</td>
+              <td>37-40</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          El método <code>CreateFolders()</code> (SSO.BusinessLayer/Services/Files/FileService.cs 50-66) usa
+          <code>Directory.CreateDirectory()</code> para asegurar que la ruta existe, creando directorios padre si es
+          necesario.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Files/FileService.cs (24-66) •
+          SSO.BusinessLayer/Services/Files/FileDirectoryService.cs (20-31)
+        </div>
+
+        <h2>Operaciones de Descarga de Archivos</h2>
+        <p><strong>Endpoint:</strong> <code>GET /api/File?id={fileId}</code></p>
+        <p>
+          El método <code>Download()</code> (SSO.Api/Controllers/Files/FileController.cs 61-72) retorna un
+          <code>FileResult</code> con contenido de arreglo de bytes, tipo de contenido y nombre de descarga.
+        </p>
+
+        <h3>Flujo de Trabajo de Descarga</h3>
+        <p>
+          El método <code>DownloadFile()</code> (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 249-268)
+          retorna un <code>FileDto</code> que contiene:
+        </p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>Data</strong> - Contenido del archivo como byte[]</li>
+          <li><strong>ContentType</strong> - Tipo MIME para manejo del navegador</li>
+          <li><strong>DownloadName</strong> - Nombre original del archivo de FileEntity.Name</li>
+        </ul>
+
+        <h3>Mapeo de Tipo de Contenido en GetContentType()</h3>
+        <p>
+          El método privado (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 270-299) mapea extensiones a tipos
+          MIME:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Extensión</th>
+              <th>Tipo MIME</th>
+              <th>Comportamiento del Navegador</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>.pdf</td>
+              <td>application/pdf</td>
+              <td>Visualización en línea en navegador</td>
+            </tr>
+            <tr>
+              <td>.jpeg, .jpg</td>
+              <td>image/jpeg</td>
+              <td>Visualización de imagen</td>
+            </tr>
+            <tr>
+              <td>.doc</td>
+              <td>application/msword</td>
+              <td>Prompt de descarga</td>
+            </tr>
+            <tr>
+              <td>.xls</td>
+              <td>application/vnd.ms-excel</td>
+              <td>Prompt de descarga</td>
+            </tr>
+            <tr>
+              <td>Por defecto</td>
+              <td>application/octet-stream</td>
+              <td>Descarga binaria genérica</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          El método <code>IFileService.GetFileAsync()</code> (SSO.BusinessLayer/Services/Files/FileService.cs 101-111)
+          lee el archivo del disco usando FileStream y retorna el arreglo de bytes mediante MemoryStream.GetBuffer().
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/Files/FileController.cs (61-72) • SSO.BusinessLayer/Services/Files/FileDirectoryService.cs
+          (249-299) • SSO.BusinessLayer/Services/Files/FileService.cs (101-111)
+        </div>
+
+        <h2>Objetos de Transferencia de Datos</h2>
+
+        <h3>DTOs y Entidades</h3>
+        <p>El subsistema de archivos usa tres DTOs y dos tipos de entidades:</p>
+
+        <p><strong>Objetos de Transferencia de Datos</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>DTO</th>
+              <th>Espacio de Nombres</th>
+              <th>Propósito</th>
+              <th>Propiedades</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>FileUploadDto</td>
+              <td>SSO.BusinessLayer.Dtos.Files</td>
+              <td>Entrada de carga masiva (JSON)</td>
+              <td>string FileName, string Base64, int FileTypeId</td>
+            </tr>
+            <tr>
+              <td>FileCreateDto</td>
+              <td>SSO.BusinessLayer.Dtos.Files</td>
+              <td>Transferencia interna a IFileService</td>
+              <td>long FileId, IFormFile Data, string FileName, int FileTypeId</td>
+            </tr>
+            <tr>
+              <td>FileDto</td>
+              <td>SSO.BusinessLayer.Dtos.Files</td>
+              <td>Respuesta de descarga</td>
+              <td>byte[] Data, string ContentType, string DownloadName</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p><strong>Entidades de Base de Datos</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Entidad</th>
+              <th>Repositorio</th>
+              <th>Propiedades Clave</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>FileEntity</td>
+              <td>IFileRepository</td>
+              <td>long Id, string Name, string Path, int FileTypeId, bool IsDeleted</td>
+            </tr>
+            <tr>
+              <td>FileType</td>
+              <td>IFileTypeRepository</td>
+              <td>int Id, string Name, string Description</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Relaciones de Entidades e Interfaces de Repositorio</h3>
+        <p>
+          El método <code>BuildFileToUpload()</code> (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 155-163)
+          transforma FileEntity + IFormFile en FileCreateDto, pasando el ID de base de datos asignado a FileService para
+          la generación del nombre de archivo.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Files/FileDirectoryService.cs (88-114) •
+          SSO.BusinessLayer/Services/Files/FileDirectoryService.cs (155-163) •
+          SSO.BusinessLayer/Services/Files/FileDirectoryService.cs (260-265)
+        </div>
+
+        <h2>Manejo de Errores y Mecanismo de Reversión</h2>
+        <p>El sistema implementa semántica transaccional con reversión de eliminación suave cuando falla el
+          almacenamiento físico.</p>
+
+        <h3>Estrategia de Manejo de Errores</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Escenario de Error</th>
+              <th>Punto de Detección</th>
+              <th>Manejo</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Fallo de validación</td>
+              <td>ValidateFile()</td>
+              <td>Excepción lanzada</td>
+              <td>Sin cambios en base de datos, HTTP 400</td>
+            </tr>
+            <tr>
+              <td>FileType no encontrado</td>
+              <td>PersistFile()</td>
+              <td>Excepción lanzada</td>
+              <td>Sin cambios en base de datos</td>
+            </tr>
+            <tr>
+              <td>Fallo de guardado en base de datos</td>
+              <td>FileRepository.Create()</td>
+              <td>Propagación de excepción</td>
+              <td>Reversión de transacción</td>
+            </tr>
+            <tr>
+              <td>Fallo de escritura en sistema de archivos</td>
+              <td>FileService.UploadFile()</td>
+              <td>OperationResult.Fail()</td>
+              <td>Se llama a InactivateFile()</td>
+            </tr>
+            <tr>
+              <td>Archivo no encontrado en descarga</td>
+              <td>DownloadFile()</td>
+              <td>OperationResult.Fail()</td>
+              <td>HTTP 400</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Lógica de Reversión en InactivateFile()</h3>
+        <p>
+          Cuando <code>IFileService.UploadFile()</code> retorna Success = false
+          (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 44) el sistema llama a <code>InactivateFile()</code>
+          (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 165-176):
+        </p>
+        <pre><code class="language-csharp">// Línea 44-48 en FileDirectoryService.cs
+if (!filePathResult.Success)
+{
+    await InactivateFile(file);
+    return OperationResult&lt;long&gt;.Fail("Ha ocurrido un error...", filePathResult.ErrorDetail);
+}
+
+// Líneas 165-176 en FileDirectoryService.cs
+private async Task InactivateFile(FileEntity file)
+{
+    try
+    {
+        file.IsDeleted = true;
+        await _fileRepository.SaveAsync();
+    }
+    catch (Exception)
+    {
+        throw new Exception("Ha ocurrido un error guardando el estado del archivo.");
+    }
+}</code></pre>
+        <p>
+          Este enfoque preserva las pistas de auditoría (el registro FileEntity permanece con
+          <code>IsDeleted = true</code>) en lugar de eliminar el registro. La bandera de eliminación suave se filtra en
+          consultas subsecuentes (SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 251) mediante
+          <code>!file.IsDeleted</code>.
+        </p>
+
+        <h3>Patrón OperationResult</h3>
+        <p>Todas las operaciones de archivos retornan <code>IOperationResult&lt;T&gt;</code>
+          (SSO.Core/Interfaces/IOperationResult.cs) con:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>Success</strong> - Estado booleano</li>
+          <li><strong>Entity</strong> - Valor de resultado (ID de archivo, ruta de archivo, arreglo de bytes)</li>
+          <li><strong>ErrorMessage</strong> - Error amigable para el usuario</li>
+          <li><strong>ErrorDetail</strong> - Detalles técnicos de excepción</li>
+        </ul>
+        <p>
+          El controlador mapea Success = false a respuestas HTTP 400 (SSO.Api/Controllers/Files/FileController.cs 28-31)
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/Files/FileDirectoryService.cs (44-48) •
+          SSO.BusinessLayer/Services/Files/FileDirectoryService.cs (165-176) •
+          SSO.BusinessLayer/Services/Files/FileDirectoryService.cs (249-268) •
+          SSO.Api/Controllers/Files/FileController.cs (23-34)
+        </div>
+
+        <h2>Dependencias de Configuración</h2>
+
+        <h3>Clase FileSettings</h3>
+        <p>
+          Tanto <code>FileDirectoryService</code> como <code>FileService</code> dependen de <code>FileSettings</code>
+          inyectado mediante <code>IOptions&lt;FileSettings&gt;</code>:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Servicio</th>
+              <th>Inyección de Constructor</th>
+              <th>Uso</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>FileDirectoryService</td>
+              <td>SSO.BusinessLayer/Services/Files/FileDirectoryService.cs 25-31</td>
+              <td>Reglas de validación</td>
+            </tr>
+            <tr>
+              <td>FileService</td>
+              <td>SSO.BusinessLayer/Services/Files/FileService.cs 19-22</td>
+              <td>Construcción de rutas</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Propiedades de Configuración</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Propiedad</th>
+              <th>Tipo</th>
+              <th>Propósito</th>
+              <th>Usado Por</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>PrincipalPath</td>
+              <td>string</td>
+              <td>Directorio de almacenamiento base (ej., /var/files)</td>
+              <td>FileService.UploadFile() línea 29</td>
+            </tr>
+            <tr>
+              <td>PrincipalFolderName</td>
+              <td>string</td>
+              <td>Nombre de carpeta raíz (ej., Files)</td>
+              <td>FileService.UploadFile() línea 29</td>
+            </tr>
+            <tr>
+              <td>AllowedExtensions</td>
+              <td>List&lt;string&gt;</td>
+              <td>Extensiones permitidas (ej., [".pdf", ".jpg", ".doc"])</td>
+              <td>ValidateFile() línea 230</td>
+            </tr>
+            <tr>
+              <td>MaxFileSize</td>
+              <td>long</td>
+              <td>Límite de tamaño en MB</td>
+              <td>ValidateFile() línea 242</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Los ajustes se cargan típicamente desde <code>appsettings.json</code> y se registran en el contenedor de DI
+          mediante <code>services.Configure&lt;FileSettings&gt;(Configuration.GetSection("FileSettings"))</code>. Para
+          detalles sobre registro de servicios, ver <a href="service-registration.html"
+            class="text-accent hover:underline">página 8.2</a>.
+        </p>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Management APIs - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        ol {
+            @apply list-decimal list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">API Controllers</div>
+
+      <h1>APIs de Gestión de Usuarios</h1>
+
+      <section class="prose prose-invert max-w-none">
+
+        <h2>Propósito y Alcance</h2>
+        <p>
+          Este documento cubre los endpoints de la API REST de gestión de usuarios proporcionados por
+          <code>UserController</code> y <code>PersonController</code>. Estos controladores exponen endpoints para
+          operaciones CRUD de cuentas de usuario, gestión de contraseñas, sincronización con Active Directory y
+          consultas de datos de persona filtradas por institución y membresía de grupo.
+        </p>
+        <p>
+          Para flujos de trabajo de solicitudes de acceso de usuarios, ver página 5.3. Para generación de tokens de
+          autenticación, ver página 3.1.
+        </p>
+
+        <h2>Descripción General de la Arquitectura</h2>
+        <p>La capa de API de gestión de usuarios consiste en dos controladores que coordinan con múltiples capas de
+          servicios:</p>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Arquitectura de la API de Gestión de Usuarios]
+        </div>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/UserController.cs (26-51) • SSO.Api/Controllers/General/PersonController.cs
+          (23-33) • SSO.BusinessLayer/Services/General/UserService.cs (21-34) •
+          SSO.BusinessLayer/Services/General/PersonService.cs (17-23)
+        </div>
+
+        <h2>Endpoints de UserController</h2>
+        <p>
+          El <code>UserController</code> extiende <code>BaseController&lt;User, UserDto&gt;</code> y proporciona gestión
+          de cuentas de usuario, operaciones de contraseñas e integración con Active Directory. El controlador se
+          encuentra en <code>SSO.Api/Controllers/General/UserController.cs</code> (26-379).
+        </p>
+        <p>
+          <strong>URL Base:</strong> Todos los endpoints tienen el prefijo <code>/api/User</code>.
+        </p>
+
+        <h3>Sincronización con Active Directory</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método HTTP</th>
+              <th>Autenticación</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>/SychActiveDirectory</td>
+              <td>POST</td>
+              <td>[AllowAnonymous]</td>
+              <td>Importar usuarios desde Active Directory a la base de datos SSO</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo de Sincronización con Active Directory]
+        </div>
+
+        <p>
+          El proceso de sincronización crea nuevas entidades <code>User</code> con entidades <code>Person</code>
+          anidadas para cada usuario de Active Directory que no esté ya presente en la base de datos. El objeto
+          <code>ADFormatUser</code> se mapea a campos de base de datos de la siguiente manera:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Propiedad AD</th>
+              <th>Campo de Base de Datos</th>
+              <th>Entidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SamAccountName</td>
+              <td>Username</td>
+              <td>User</td>
+            </tr>
+            <tr>
+              <td>GivenName</td>
+              <td>FirstName</td>
+              <td>Person</td>
+            </tr>
+            <tr>
+              <td>MiddleName</td>
+              <td>LastName</td>
+              <td>Person</td>
+            </tr>
+            <tr>
+              <td>EmailAddress</td>
+              <td>Email</td>
+              <td>Person</td>
+            </tr>
+            <tr>
+              <td>VoiceTelephoneNumber</td>
+              <td>Telephone</td>
+              <td>Person</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Todos los usuarios importados tienen IsExternal=false, IsLocked=false, ResetPassword=false y Password=null
+          (autenticación delegada a AD).
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/UserController.cs (54-112) • SSO.BusinessLayer/Services/General/UserService.cs
+          (36-62)
+        </div>
+
+        <h3>Gestión de Contraseñas</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método HTTP</th>
+              <th>Autenticación</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>/ChangePassword</td>
+              <td>POST</td>
+              <td>Requerida</td>
+              <td>Actualizar contraseña de usuario después de que se establece la bandera de reinicio</td>
+            </tr>
+            <tr>
+              <td>/PasswordReset/{usuarioId}</td>
+              <td>PATCH</td>
+              <td>Requerida</td>
+              <td>Restablecer contraseña de usuario a valor predeterminado del sistema</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>Cambiar Contraseña</h4>
+        <p><strong>Endpoint:</strong> POST /api/User/ChangePassword</p>
+        <p><strong>Cuerpo de la Solicitud:</strong> ChangePasswordRequestDto</p>
+        <pre><code class="language-json">{
+  "UserId": int,
+  "NewPassword": string
+}</code></pre>
+        <p><strong>Proceso:</strong></p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>Cargar entidad Person con Include(x => x.User) desde MainDbContext</li>
+          <li>Verificar User.ResetPassword == true, retornar 400 BadRequest si es false</li>
+          <li>Cifrar contraseña usando BCrypt.Net.BCrypt.HashPassword(model.NewPassword)</li>
+          <li>Establecer User.Password al valor cifrado</li>
+          <li>Establecer User.ResetPassword = false</li>
+          <li>Llamar _context.SaveChangesAsync()</li>
+          <li>Retornar PersonDto con datos actualizados</li>
+        </ol>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/UserController.cs (115-161)
+        </div>
+
+        <h4>Restablecer Contraseña</h4>
+        <p><strong>Endpoint:</strong> PATCH /api/User/PasswordReset/{usuarioId}</p>
+        <p><strong>Proceso:</strong></p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>Cargar entidad User con Include(x => x.Person) desde clave MainDbContext.Usuario</li>
+          <li>Cifrar contraseña predeterminada del sistema:
+            BCrypt.Net.BCrypt.HashPassword(_systemSettings.DefaultSystemPassword)</li>
+          <li>Establecer User.Password al valor cifrado</li>
+          <li>Establecer User.ResetPassword = true</li>
+          <li>Llamar _context.SaveChangesAsync()</li>
+          <li>Enviar correo vía _mailService.SendEmailAsync() con notificación de reinicio</li>
+        </ol>
+        <p>El cuerpo del correo incluye texto de contraseña predeterminada codificado: "Clave: Inicio01"</p>
+        <p><strong>Configuración:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>La contraseña predeterminada del sistema se lee de SystemSettings.DefaultSystemPassword vía
+            IOptions&lt;SystemSettings&gt;</li>
+          <li>Correo enviado a User.Person.Email</li>
+          <li>Asunto: "Reinicio De Usuario"</li>
+          <li>Proceso: "Contraseña de Usuario Reiniciada"</li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/UserController.cs (163-203) • SSO.BusinessLayer/Services/General/UserService.cs
+          (82-86)
+        </div>
+
+        <h3>Operaciones de Búsqueda de Usuarios</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método HTTP</th>
+              <th>Autenticación</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>/{documentType}/{document}</td>
+              <td>GET</td>
+              <td>Requerida</td>
+              <td>Obtener usuario por tipo y número de documento, con respaldo de validación externa</td>
+            </tr>
+            <tr>
+              <td>/GetByEmail/{email}</td>
+              <td>GET</td>
+              <td>Requerida</td>
+              <td>Obtener usuario por dirección de correo electrónico</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>Obtener Usuario por Documento</h4>
+        <p><strong>Endpoint:</strong> GET /api/User/{documentType}/{document}</p>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Flujo de Búsqueda de Documento]
+        </div>
+        <p>
+          <strong>Validación Externa:</strong> Cuando documentType == 1 (cédula) y el usuario no se encuentra
+          localmente, el controlador consulta <code>IConsultaPadronService.DatosBasicosAsyc()</code> para validación de
+          ID nacional. La respuesta payload se mapea a un nuevo UserDto:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Campo de Padrón</th>
+              <th>Campo de DTO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>payload.names</td>
+              <td>Person.FirstName</td>
+            </tr>
+            <tr>
+              <td>payload.firstSurname + ' ' + payload.secondSurname</td>
+              <td>Person.LastName</td>
+            </tr>
+            <tr>
+              <td>payload.id</td>
+              <td>Person.Document</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/UserController.cs (206-273) • SSO.BusinessLayer/Services/General/UserService.cs
+          (73-80)
+        </div>
+
+        <h4>Obtener Usuario por Correo Electrónico</h4>
+        <p><strong>Endpoint:</strong> GET /api/User/GetByEmail/{email}</p>
+        <p><strong>Proceso:</strong></p>
+        <ol class="list-decimal pl-6 space-y-1">
+          <li>Consultar _context.Users.Include(x => x.Person).FirstOrDefaultAsync(x => x.Person.Email == email)</li>
+          <li>Mapear a UserDto si se encuentra</li>
+          <li>Retornar OperationResult&lt;UserDto&gt; con Success=true o Success=false</li>
+        </ol>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/UserController.cs (275-319)
+        </div>
+
+        <h3>Endpoints de Integración SINACID</h3>
+        <p>Estos endpoints proporcionan consultas especializadas para la aplicación SINACID (ApplicationId=1014).</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método HTTP</th>
+              <th>Autenticación</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>/GetResponsablesSINACID/{grupoId}</td>
+              <td>GET</td>
+              <td>[AllowAnonymous]</td>
+              <td>Obtener usuarios en un grupo específico</td>
+            </tr>
+            <tr>
+              <td>/GetResponsableByIdSINACID/{responsableid}</td>
+              <td>GET</td>
+              <td>[AllowAnonymous]</td>
+              <td>Obtener responsable específico (actualmente retorna todos, no filtrado por ID)</td>
+            </tr>
+            <tr>
+              <td>/GetAllResponsablesSINACID</td>
+              <td>GET</td>
+              <td>[AllowAnonymous]</td>
+              <td>Obtener todos los usuarios con grupos en ApplicationId=1014</td>
+            </tr>
+            <tr>
+              <td>/GetAllCorresponsablesSINACID</td>
+              <td>GET</td>
+              <td>[AllowAnonymous]</td>
+              <td>Obtener usuarios en grupos específicos: 3026, 3030, 3031, 3037, 3025</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>DTO de Respuesta: ResponsableDto</strong></p>
+        <pre><code class="language-json">{
+  "UserId": int,
+  "Nombre": string,
+  "Apellido": string
+}</code></pre>
+        <p>
+          <strong>Patrón de Consulta:</strong> Todos los endpoints unen tablas Usuario, People, UsersGroups y
+          opcionalmente Groups. Filtran usuarios de prueba con <code>!persona.FirstName.Contains("_test_")</code>.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/UserController.cs (323-378) • SSO.BusinessLayer/Services/General/UserService.cs
+          (88-203)
+        </div>
+
+        <h2>Endpoints de PersonController</h2>
+        <p>
+          El <code>PersonController</code> extiende <code>BaseController&lt;Person, PersonDto&gt;</code> y proporciona
+          consultas de datos de persona con permisos de aplicación integrados. El controlador se encuentra en
+          <code>SSO.Api/Controllers/General/PersonController.cs</code> (23-166).
+        </p>
+        <p>
+          <strong>URL Base:</strong> Todos los endpoints tienen el prefijo <code>/api/Person</code>.
+        </p>
+
+        <h3>Operaciones CRUD Estándar</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método HTTP</th>
+              <th>Autenticación</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>/{id}</td>
+              <td>GET</td>
+              <td>Requerida</td>
+              <td>Obtener persona por ID con aplicaciones de usuario y permisos</td>
+            </tr>
+            <tr>
+              <td>/</td>
+              <td>GET</td>
+              <td>Requerida</td>
+              <td>Obtener personas con paginación y búsqueda</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>Obtener Persona por ID</h4>
+        <p><strong>Endpoint:</strong> GET /api/Person/{id}</p>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Recuperación de Persona con Permisos]
+        </div>
+        <p>
+          El método <code>PersonService.GeTModelByIdAsync()</code> carga con eager loading:
+        </p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Person.User</li>
+          <li>Person.User.ApplicationsUsers → ApplicationsUsers.Application</li>
+          <li>Person.User.UsersGroups → UsersGroups.Group</li>
+        </ul>
+        <p>
+          Después de mapear a PersonDto, el controlador enriquece cada ApplicationUserDto con permisos de módulos
+          llamando a <code>ApplicationService.GetPermissionsByUserIdAndAppIdAsync()</code>.
+        </p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/PersonController.cs (35-56) • SSO.BusinessLayer/Services/General/PersonService.cs
+          (25-37)
+        </div>
+
+        <h4>Obtener Personas con Paginación</h4>
+        <p><strong>Endpoint:</strong> GET /api/Person?_page={page}&_limit={limit}&q={search}</p>
+        <p><strong>Parámetros de Consulta:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>_page (opcional): Número de página para paginación</li>
+          <li>_limit (opcional): Elementos por página</li>
+          <li>q (opcional): Consulta de búsqueda para Document, FirstName, LastName o Email</li>
+        </ul>
+        <p><strong>Respuesta:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Si se proporcionan parámetros de paginación: OperationResult&lt;List&lt;PersonDto&gt;&gt; con conteo Total
+          </li>
+          <li>Si no hay paginación: Todas las personas en OperationResult&lt;List&lt;PersonDto&gt;&gt;</li>
+        </ul>
+        <p><strong>Predicado de Búsqueda:</strong></p>
+        <pre><code class="language-csharp">x => x.Document.Contains(q) || x.FirstName.Contains(q) || x.LastName.Contains(q) || x.Email.Contains(q)</code></pre>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/PersonController.cs (58-105)
+        </div>
+
+        <h3>Operaciones de Consulta Especializadas</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Método HTTP</th>
+              <th>Autenticación</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>/GetPersonByInstitutionId</td>
+              <td>POST</td>
+              <td>[AllowAnonymous]</td>
+              <td>Obtener personas por IDs de institución filtradas por aplicación</td>
+            </tr>
+            <tr>
+              <td>/GetPersonByGroupId</td>
+              <td>GET</td>
+              <td>[AllowAnonymous]</td>
+              <td>Obtener personas en un grupo con acceso a una aplicación</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>Obtener Personas por Institución</h4>
+        <p><strong>Endpoint:</strong> POST /api/Person/GetPersonByInstitutionId</p>
+        <p><strong>Cuerpo de la Solicitud:</strong> PersonRequest</p>
+        <pre><code class="language-json">{
+  "institutionId": [int],
+  "applicationId": int
+}</code></pre>
+        <p><strong>Lógica de Consulta:</strong></p>
+        <pre><code class="language-csharp">_context.People.Where(x => 
+    personRequest.institutionId.Contains(x.InstitutionId.Value) &&
+    x.User.ApplicationsUsers.Select(y => y.ApplicationId).Contains(personRequest.applicationId)
+)</code></pre>
+        <p>La consulta retorna personas que:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Pertenecen a cualquier institución en el arreglo institutionId</li>
+          <li>Tienen un registro ApplicationUser para el applicationId especificado</li>
+          <li>Incluye: User → ApplicationsUsers → Application, y User → UsersGroups → Group</li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/PersonController.cs (107-135) •
+          SSO.BusinessLayer/Services/General/PersonService.cs (39-54)
+        </div>
+
+        <h4>Obtener Personas por Grupo</h4>
+        <p><strong>Endpoint:</strong> GET /api/Person/GetPersonByGroupId?groupId={groupId}&applicationId={applicationId}
+        </p>
+        <p><strong>Parámetros de Consulta:</strong></p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>groupId: El ID del grupo para filtrar</li>
+          <li>applicationId: El ID de la aplicación para filtrar</li>
+        </ul>
+        <p><strong>Lógica de Consulta:</strong></p>
+        <pre><code class="language-csharp">_context.People.Where(x => 
+    x.User.UsersGroups.Select(y => y.GroupId).Contains(groupId) &&
+    x.User.ApplicationsUsers.Select(y => y.ApplicationId).Contains(applicationId)
+)</code></pre>
+        <p>Retorna personas que son miembros del grupo especificado Y tienen acceso a la aplicación especificada.</p>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.Api/Controllers/General/PersonController.cs (137-165) •
+          SSO.BusinessLayer/Services/General/PersonService.cs (56-69)
+        </div>
+
+        <h2>Objetos de Transferencia de Datos</h2>
+
+        <h3>Modelos de Solicitud</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>DTO</th>
+              <th>Propiedades</th>
+              <th>Uso</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ChangePasswordRequestDto</td>
+              <td>UserId: int<br>NewPassword: string</td>
+              <td>Solicitudes de cambio de contraseña</td>
+            </tr>
+            <tr>
+              <td>PersonRequest</td>
+              <td>institutionId: int[]<br>applicationId: int</td>
+              <td>Filtrado de personas basado en institución</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Estructura de Respuesta</h3>
+        <p>Todos los endpoints retornan OperationResult&lt;T&gt; o OperationResult:</p>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Relaciones de DTOs]
+        </div>
+
+        <h4>Características Clave de los DTOs:</h4>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>UserDto contiene colecciones para ApplicationsUsers, UsersGroups y ApplicationsModulesAccesses</li>
+          <li>PersonDto contiene una referencia a UserDto y EmployeeDto opcional</li>
+          <li>ApplicationUserDto.Modules es poblado por el controlador después del mapeo de DTO vía
+            ApplicationService.GetPermissionsByUserIdAndAppIdAsync()</li>
+          <li>ResponsableDto es una proyección simplificada para consultas SINACID</li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Dtos/General/UserDto.cs • SSO.BusinessLayer/Dtos/General/PersonDto.cs •
+          SSO.BusinessLayer/Dtos/SICI/ResponsableDto.cs
+        </div>
+
+        <h2>Implementación de la Capa de Servicios</h2>
+
+        <h3>UserService</h3>
+        <p>UserService extiende BaseRepository&lt;User&gt; e implementa IUserService. Métodos clave:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>Propósito</th>
+              <th>Fuente</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ImportActiveDirectoryUsers(List&lt;User&gt;)</td>
+              <td>Inserción masiva de usuarios de AD</td>
+              <td>SSO.BusinessLayer/Services/General/UserService.cs (36-44)</td>
+            </tr>
+            <tr>
+              <td>StatusDirectoryUsers(List&lt;string&gt;, bool)</td>
+              <td>Actualizar bandera IsActive para sincronización de AD</td>
+              <td>SSO.BusinessLayer/Services/General/UserService.cs (46-62)</td>
+            </tr>
+            <tr>
+              <td>GetUserByDocumentIdAsync(int, string)</td>
+              <td>Consultar por tipo y número de documento</td>
+              <td>SSO.BusinessLayer/Services/General/UserService.cs (73-80)</td>
+            </tr>
+            <tr>
+              <td>Add(User)</td>
+              <td>Sobreescritura para cifrar contraseña predeterminada</td>
+              <td>SSO.BusinessLayer/Services/General/UserService.cs (82-86)</td>
+            </tr>
+            <tr>
+              <td>GetResponsables(int)</td>
+              <td>Obtener usuarios en grupo</td>
+              <td>SSO.BusinessLayer/Services/General/UserService.cs (88-114)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <strong>Comportamiento de Sobreescritura de Add:</strong> Al crear un nuevo usuario vía UserService.Add(), la
+          contraseña se establece automáticamente al valor predeterminado cifrado del sistema:
+        </p>
+        <pre><code class="language-csharp">entity.Password = BCrypt.Net.BCrypt.HashPassword(_systemSettings.DefaultSystemPassword);</code></pre>
+
+        <h3>PersonService</h3>
+        <p>PersonService extiende BaseRepository&lt;Person&gt; e implementa IPersonService. Métodos clave:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>Propósito</th>
+              <th>Eager Loading</th>
+              <th>Fuente</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GeTModelByIdAsync(int)</td>
+              <td>Obtener persona con datos de usuario</td>
+              <td>User.ApplicationsUsers.Application<br>User.UsersGroups.Group</td>
+              <td>SSO.BusinessLayer/Services/General/PersonService.cs (25-37)</td>
+            </tr>
+            <tr>
+              <td>GetPersonByInstitutionId(PersonRequest)</td>
+              <td>Filtrar por instituciones y aplicación</td>
+              <td>Igual que arriba</td>
+              <td>SSO.BusinessLayer/Services/General/PersonService.cs (39-54)</td>
+            </tr>
+            <tr>
+              <td>GetPersonByGroupId(int, int)</td>
+              <td>Filtrar por grupo y aplicación</td>
+              <td>Igual que arriba</td>
+              <td>SSO.BusinessLayer/Services/General/PersonService.cs (56-69)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Patrón de Acceso a Datos</h3>
+        <div
+          class="my-6 p-4 border border-border-dark border-dashed rounded bg-bg-surface text-center text-text-secondary text-sm">
+          [Diagrama: Patrón de Acceso a Datos]
+        </div>
+        <p>Ambos controladores usan un enfoque híbrido:</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>UserController inyecta MainDbContext directamente para consultas complejas
+            (SSO.Api/Controllers/General/UserController.cs 31-48)</li>
+          <li>PersonController delega a PersonService para acceso a datos
+            (SSO.Api/Controllers/General/PersonController.cs 26-32)</li>
+          <li>Los servicios heredan BaseRepository&lt;T&gt; para CRUD estándar e inyectan MainDbContext para consultas
+            personalizadas</li>
+        </ul>
+
+        <div class="sources-box">
+          <span class="sources-label">Fuentes:</span>
+          SSO.BusinessLayer/Services/General/UserService.cs (21-34) •
+          SSO.BusinessLayer/Services/General/PersonService.cs (17-23) • SSO.Api/Controllers/General/UserController.cs
+          (26-51) • SSO.Api/Controllers/General/PersonController.cs (23-33)
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Core Database Schema - SSO Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-dark': 'var(--bg-app)',
+            'sidebar-dark': 'var(--bg-sidebar)',
+            'border-dark': 'var(--border-color)',
+            'text-primary': 'var(--text-primary)',
+            'text-secondary': 'var(--text-secondary)',
+            'accent': 'var(--color-accent)',
+            'text-header': 'var(--text-header)',
+              'bg-surface': 'var(--bg-surface)',
+            'text-code': 'var(--text-code)',
+            'bg-active': 'var(--bg-active)',
+            'text-on-active': 'var(--text-on-active)',
+            },
+          fontFamily: {
+            'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          spacing: {
+            'sidebar': '300px',
+          }
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+        body {
+          @apply bg-bg-dark text-text-primary font-sans antialiased;
+        }
+        h1 {
+            @apply text-3xl font-semibold text-text-header mb-6;
+        }
+        h2 {
+            @apply text-2xl font-semibold text-text-header mt-12 mb-4 border-b border-border-dark pb-2;
+        }
+        h3 {
+            @apply text-xl font-semibold text-text-header mt-8 mb-3;
+        }
+        h4 {
+            @apply text-lg font-medium text-text-header mt-6 mb-2;
+        }
+        p {
+            @apply leading-7 text-text-primary mb-4;
+        }
+        ul {
+            @apply list-disc list-outside pl-6 mb-4 space-y-1;
+        }
+        li {
+            @apply text-text-primary;
+        }
+        code {
+            @apply font-mono text-sm bg-bg-surface text-text-code px-1.5 py-0.5 rounded border border-gray-700;
+        }
+        pre {
+            @apply bg-bg-surface border border-border-dark p-4 rounded-md overflow-x-auto mb-6 text-sm text-text-code;
+        }
+        /* Table Styles */
+        table {
+            @apply w-full text-left border-collapse border border-border-dark mb-6 mt-4;
+        }
+        th {
+            @apply border-b border-border-dark bg-bg-surface p-3 text-sm font-semibold text-text-header;
+        }
+        td {
+            @apply border-b border-border-dark p-3 text-sm text-text-primary align-top;
+        }
+        tr:last-child td {
+            @apply border-b-0;
+        }
+        
+        /* Sources Box */
+        .sources-box {
+            @apply mt-4 p-3 bg-bg-surface border border-border-dark rounded text-xs font-mono text-text-secondary;
+        }
+        .sources-label {
+            @apply font-bold text-gray-400 block mb-1 uppercase tracking-wider text-[10px];
+        }
+      }
+    </style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <header
+    class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-border-dark sticky top-0 bg-bg-dark/80 backdrop-blur-md z-50">
+    <span class="font-bold text-lg text-white">SSO Docs</span>
+    <button id="mobile-menu-btn" class="text-text-secondary hover:text-white p-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen relative">
+    <!-- Sidebar -->
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 w-sidebar h-screen overflow-y-auto border-r border-border-dark p-6 bg-sidebar-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 lg:static lg:h-auto lg:border-r-0 lg:block">
+      <!-- Content populated by main.js -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-sidebar max-w-4xl mx-auto pt-10 pb-32 px-8">
+
+      <div class="mb-2 text-sm text-text-secondary font-medium uppercase tracking-wider">Database</div>
+
+      <h1>Esquema de Base de Datos Principal</h1>
+
+      <section class="prose prose-invert max-w-none">
+        <p>
+          Este documento describe el esquema de base de datos, estructuras de tablas, relaciones entre entidades y la
+          configuración de Entity Framework Core que sustenta el sistema SSO. Cubre la organización física de la base de
+          datos, estrategia de migración, datos de inicialización y patrones comunes aplicados en todas las entidades.
+        </p>
+        <p>
+          Para información sobre las entidades de dominio y sus relaciones de negocio, ver <a href="#"
+            class="text-accent hover:underline">Entidades y Relaciones Principales</a>. Para detalles sobre el esquema
+          de control de acceso, ver <a href="#" class="text-accent hover:underline">Esquema de Gestión de Solicitudes de
+            Acceso</a>. Para la estructura de módulos jerárquicos, ver <a href="#"
+            class="text-accent hover:underline">Jerarquía de Módulos de Aplicación</a>.
+        </p>
+
+        <h2>Organización de la Base de Datos</h2>
+        <p>El sistema SSO utiliza SQL Server con dos esquemas lógicos que organizan las tablas por dominio funcional:
+        </p>
+
+        <table>
+          <table>
+            <thead>
+              <tr>
+                <th>Esquema</th>
+                <th>Propósito</th>
+                <th>Tablas Clave</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Core</td>
+                <td>Entidades específicas de SSO para autenticación, autorización y registro de aplicaciones</td>
+                <td>Application, ApplicationModule, ApplicationAccessRequest, ApplicationModuleAccess, UserAccessControl
+                </td>
+              </tr>
+              <tr>
+                <td>General</td>
+                <td>Entidades compartidas para identidad, organizaciones y datos de referencia</td>
+                <td>Person, User, Employee, Institution, Area, Position, DocumentType, Gender, Status, Group</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="mt-4">
+            Las tablas adicionales sin asignación explícita de esquema utilizan por defecto el esquema <code>dbo</code>
+            e incluyen gestión de archivos (FileEntity, FileType) y configuración del sistema (MailTemplate).
+          </p>
+
+          <div class="sources-box">
+            <span class="sources-label">Fuentes:</span>
+            SSO.DataModel/Context/MainDbContext.cs (51-83)
+          </div>
+
+          <h2>Configuración de Entity Framework Core</h2>
+
+          <h3>Estructura del DbContext</h3>
+          <p><code>MainDbContext</code> organiza los conjuntos de entidades por esquema:</p>
+          <pre><code class="language-csharp">// Esquema Core
+public DbSet&lt;Application&gt; Application { get; set; }
+public DbSet&lt;ApplicationModule&gt; ApplicationModule { get; set; }
+public DbSet&lt;UserAccessControl&gt; UserAccessControl { get; set; }
+
+// Esquema General
+public DbSet&lt;Person&gt; Person { get; set; }
+public DbSet&lt;User&gt; User { get; set; }
+public DbSet&lt;Employee&gt; Employee { get; set; }</code></pre>
+
+          <h3>Descubrimiento de Configuración</h3>
+          <p>
+            Las configuraciones se descubren automáticamente vía reflexión en <code>OnModelCreating</code>, escaneando
+            clases que implementan <code>IEntityTypeConfiguration&lt;T&gt;</code>.
+          </p>
+
+          <h3>Filtros de Consulta Globales</h3>
+          <p>
+            Se aplica un filtro de eliminación suave a todas las entidades <code>IEntityBase</code>. Los registros con
+            <code>IsDeleted = true</code> se excluyen automáticamente.
+          </p>
+          <pre><code class="language-csharp">// SSO.DataModel/Context/MainDbContext.cs
+modelBuilder.SetSoftDeleteFilter(type.ClrType);</code></pre>
+
+          <div class="sources-box">
+            <span class="sources-label">Fuentes:</span>
+            SSO.DataModel/Context/MainDbContext.cs (17-83)
+          </div>
+
+          <h2>Auditoría de Entidades y Gestión del Ciclo de Vida</h2>
+
+          <h3>Automatización de Campos de Auditoría</h3>
+          <p>Sobreescritura de <code>SaveChanges</code> para poblar campos automáticamente:</p>
+
+          <pre><code class="language-csharp">public override Task&lt;int&gt; SaveChangesAsync(...)
+{
+    AuditEntities();
+    return base.SaveChangesAsync(...);
+}
+
+private void AuditEntities() {
+    // Inserción: CreatedBy = 1, RegistrationDate = Now
+    // Actualización: UpdateBy = 1, ModificationDate = Now
+}</code></pre>
+
+          <h3>Patrón de Eliminación Suave</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Propósito</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>IsDeleted</td>
+                <td>bit</td>
+                <td>Marca registros como eliminados sin removerlos físicamente</td>
+              </tr>
+              <tr>
+                <td>IsActive</td>
+                <td>bit</td>
+                <td>Controla si los registros están actualmente activos</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h2>Patrones Comunes de Tablas</h2>
+
+          <h3>Claves Primarias</h3>
+          <p>Columnas de identidad enteras con nomenclatura <code>&lt;NombreEntidad&gt;Id</code> (ej., ApplicationId).
+          </p>
+
+          <h3>Columnas de Auditoría</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Columna</th>
+                <th>Tipo</th>
+                <th>Nullable</th>
+                <th>Propósito</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>CreatedBy</td>
+                <td>int</td>
+                <td>No</td>
+                <td>Autor creación</td>
+              </tr>
+              <tr>
+                <td>RegistrationDate</td>
+                <td>datetimeoffset</td>
+                <td>No</td>
+                <td>Fecha creación</td>
+              </tr>
+              <tr>
+                <td>UpdateBy</td>
+                <td>int</td>
+                <td>No</td>
+                <td>Autor modificación</td>
+              </tr>
+              <tr>
+                <td>ModificationDate</td>
+                <td>datetimeoffset</td>
+                <td>Sí</td>
+                <td>Fecha modificación</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Banderas de Estado</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Columna</th>
+                <th>Default</th>
+                <th>Propósito</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>IsActive</td>
+                <td>true</td>
+                <td>Registro activo</td>
+              </tr>
+              <tr>
+                <td>IsDeleted</td>
+                <td>false</td>
+                <td>Registro eliminado</td>
+              </tr>
+            </tbody>
+          </table>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+
+</html>
