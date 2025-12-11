@@ -37,15 +37,7 @@ const sitemap = [
             { text: 'APIs de Gestión de Usuarios', href: 'user-management-apis.html' },
             { text: 'APIs de Aplicaciones y Módulos', href: 'application-module-apis.html' },
             { text: 'APIs de Solicitud de Acceso', href: 'access-request-apis.html' },
-            { text: 'APIs de Gestión de Archivos', href: 'file-management-apis.html' },
         ]
-    },
-    {
-        title: 'Servicios de Negocio',
-        items: [
-            { text: 'Servicios de Archivos', href: 'file-services.html' },
-        ]
-
     }
 ];
 
@@ -243,4 +235,99 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+    // Initialize PDF Download Feature
+    injectHtml2Pdf();
 });
+
+// Inject html2pdf.js Library
+function injectHtml2Pdf() {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = () => {
+        console.log('html2pdf loaded');
+        injectDownloadButton();
+    };
+    document.head.appendChild(script);
+}
+
+// Inject Download Button next to H1
+function injectDownloadButton() {
+    const h1 = document.querySelector('h1');
+    if (!h1) return;
+
+    // Create wrapper for title and button
+    const wrapper = document.createElement('div');
+    wrapper.className = 'flex items-center gap-4 mb-6';
+
+    // Move h1 into wrapper
+    h1.parentNode.insertBefore(wrapper, h1);
+    wrapper.appendChild(h1);
+
+    // Remove margin from h1 as wrapper handles it
+    h1.classList.remove('mb-6');
+    h1.classList.add('mb-0');
+
+    // Create Button
+    const btn = document.createElement('button');
+    btn.className = 'p-2 rounded-md hover:bg-bg-active text-text-secondary hover:text-text-primary transition-colors';
+    btn.title = 'Descargar PDF';
+    btn.setAttribute('aria-label', 'Descargar PDF');
+    btn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+    `;
+
+    btn.addEventListener('click', generatePDF);
+    wrapper.appendChild(btn);
+}
+
+// Generate PDF (Print Fallback)
+function generatePDF() {
+    // Because html2pdf.js cannot process file:// protocol due to CORS/Security restrictions,
+    // we use window.print() which allows users to "Save as PDF" natively.
+    // We inject print-specific styles to ensure a clean output (hiding sidebar, etc).
+
+    // Inject Print Styles if not present
+    if (!document.getElementById('print-styles')) {
+        const style = document.createElement('style');
+        style.id = 'print-styles';
+        style.textContent = `
+            @media print {
+                /* Hide Sidebar and Interactive Elements */
+                #sidebar, #mobile-menu-btn, #theme-toggle, .mobile-overlay {
+                    display: none !important;
+                }
+                
+                /* Hide the download buttons themselves */
+                button[aria-label="Descargar PDF"] {
+                    display: none !important;
+                }
+
+                /* Reset Margins for Main Content */
+                main {
+                    margin-left: 0 !important;
+                    padding: 0 !important;
+                    max-width: 100% !important;
+                }
+
+                /* Ensure text is black for printing */
+                body {
+                    color: black !important;
+                    background: white !important;
+                }
+                
+                /* Expand code blocks */
+                pre {
+                    white-space: pre-wrap !important;
+                    overflow: visible !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    window.print();
+}
